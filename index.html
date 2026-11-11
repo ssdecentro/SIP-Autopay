@@ -1,0 +1,1451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Decentro · Mutual Fund SIP — mandate-first (no RPD)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   TOKENS — shadcn-style names, lifted from the house demo shell.
+   --brand is the merchant (AMC) white-label colour.
+   ========================================================================= */
+:root{
+  --background:#F5F5F5; --card:#FFFFFF; --foreground:#0A0A0A;
+  --muted:#FAFAFA; --muted-foreground:#525252; --subtle:#737373;
+  --border:#E5E5E5; --border-soft:#EDEDED; --ring:#0A0A0A;
+  --primary:#0A0A0A; --primary-foreground:#FFFFFF;
+  --success:#15803D; --success-bg:#ECFDF3;
+  --warn:#92400E; --warn-bg:#FFFBEB; --warn-line:#FDE68A;
+  --destructive:#B91C1C; --destructive-bg:#FEF2F2;
+  --radius:12px;
+
+  /* Merchant (AMC) white-label */
+  --brand:#2E3A8C;
+  --brand-soft:color-mix(in srgb, var(--brand) 10%, #FFFFFF);
+  --m-bg:#F6F7FA; --m-ink:#101320; --m-muted:#4A4F63; --m-line:#E4E6EE; --m-track:#D5D8E3;
+
+
+  /* Primary follows the brand the user picks — every screen, merchant and Decentro alike */
+  --accent:var(--brand); --accent-ink:#FFFFFF;
+  --accent-soft:color-mix(in srgb, var(--brand) 9%, #FFFFFF);
+  --card-r:12px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --fs-h:clamp(20px, 2.6cqw, 25px);
+  --fs-t:14.5px; --fs-b:14px; --fs-s:12.5px; --fs-xs:12px;
+  --lh:1.55; --hd:60px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--foreground);background:var(--background);-webkit-font-smoothing:antialiased;line-height:var(--lh)}
+button,input,select{font-family:inherit}
+a{color:inherit}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.i-sm{width:14px;height:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
+/* =========================================================================
+   HOST / DEVICE FRAME / STAGE
+   The stage is a size container, so every layout rule below answers to the
+   simulated device instead of the browser window. Full / iPad / iPhone come
+   from the hub's device views (Decentro-Demo.MD §6.5): logical sizes, scaled
+   to fit, never upscaled.
+   ========================================================================= */
+.host{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:var(--background)}
+.host.framed{background:#0F1115;padding:18px}
+.device{position:relative;width:100%;height:100%;display:flex;flex-direction:column;transform-origin:center center}
+.device.framed{box-sizing:content-box;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  flex:none;width:var(--dw);height:var(--dh);padding:var(--dbz);
+  border-radius:var(--dr);background:#0A0C0F;overflow:hidden;
+  box-shadow:0 40px 90px -28px rgba(0,0,0,.6),0 0 0 1.5px rgba(255,255,255,.07) inset}
+.device.framed .stage{border-radius:0}
+.device.framed>.sbar,.device.framed>.hbar,.device.framed>.stage{background:#fff}
+.device.framed{border-radius:var(--dr)}
+.device.framed>:first-child{border-radius:var(--dsr) var(--dsr) 0 0}
+.device.framed>:last-child{border-radius:0 0 var(--dsr) var(--dsr)}
+.sbar{flex:none;display:flex;align-items:center;justify-content:space-between;height:var(--dsb,44px);padding:0 26px;color:#0B0F14;font-size:13px;font-weight:700;position:relative}
+.sbar .ico{display:flex;align-items:center;gap:5px}
+.sbar .ico svg{width:17px;height:12px;display:block}
+.island{position:absolute;left:50%;top:9px;transform:translateX(-50%);width:112px;height:30px;border-radius:999px;background:#000}
+.device.ipad .sbar{padding:0 18px;font-size:12px}
+.hbar{flex:none;height:var(--dhb,26px);display:grid;place-items:center}
+.hbar i{width:132px;height:5px;border-radius:99px;background:#0B0F14;opacity:.82}
+.device.ipad .hbar i{width:200px}
+.stage{flex:1;min-height:0;width:100%;position:relative;overflow:hidden;background:var(--background);
+  container-type:size;
+  --fs-h:clamp(20px,2.6cqw,25px)}
+
+.viewseg{position:fixed;left:16px;bottom:16px;z-index:88;display:inline-flex;gap:2px;padding:3px;border-radius:11px;background:#0A0A0A;border:1px solid #262626;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.viewseg button{appearance:none;border:0;height:30px;padding:0 12px;border-radius:8px;font-size:11.5px;font-weight:600;color:#A3A3A3;background:transparent;cursor:pointer}
+.viewseg button:hover{color:#fff;background:#1A1A1A}
+.viewseg button[aria-pressed="true"]{background:#0092FF;color:#fff}
+.viewseg[hidden]{display:none!important}
+
+/* =========================================================================
+   SCREEN SYSTEM — fills the stage; only the body of a panel ever scrolls,
+   so the primary action stays on screen at every size.
+   ========================================================================= */
+.screen{display:none;height:100%;flex-direction:column;overflow:hidden}
+.screen.active{display:flex;animation:fade .22s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+.hd{height:var(--hd);flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(14px,4cqw,48px);background:#fff;border-bottom:1px solid var(--border-soft);min-width:0}
+.hd>*{min-width:0}
+.logo{display:block;width:clamp(104px,16cqw,127px);height:auto;flex:none}
+.logo-sm{display:block;width:80px;height:10px;flex:none}
+.chip-m{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;font-size:12px;font-weight:500;color:#404040;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.body{flex:1;min-height:0;display:flex;justify-content:center;align-items:stretch;gap:48px;overflow:hidden}
+.panel{width:100%;max-width:480px;min-height:0;display:flex;flex-direction:column;background:var(--card)}
+.panel-in{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px 18px 4px;display:flex;flex-direction:column;gap:18px}
+.panel-in>*{min-width:0}
+.grow{flex:0 0 auto;min-height:8px}
+.panel-ft{flex:none;padding:12px 18px 18px;display:flex;flex-direction:column;gap:10px;background:var(--card)}
+.side{display:none;flex:none}
+
+@container (min-width:900px){
+  .body{padding:40px 32px;align-items:flex-start}
+  .panel{max-height:100%;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .panel-in{padding:28px 28px 4px}
+  .panel-ft{padding:12px 28px 24px}
+  .side{display:block}
+  .m-only{display:none!important}
+}
+/* short viewports: tighten everything rather than hand the user a scrollbar */
+@container (max-height:720px){
+  :root,.stage{--hd:52px}
+  .panel-in{gap:14px;padding-top:16px}
+  .btn{height:48px;font-size:15px}
+  .field{height:48px}
+  .card-box{padding:13px;gap:10px}
+  .halo{width:52px;height:52px}
+  .halo svg{width:25px;height:25px}
+  .amt{font-size:28px}
+}
+@container (max-height:580px){
+  .panel-in{gap:11px;padding-top:12px}
+  .btn{height:44px}
+  .field{height:44px}
+  .otp input{height:44px;font-size:19px}
+  .note{padding:9px 11px;font-size:11.5px;line-height:16px}
+}
+
+h1{margin:0;font-size:var(--fs-h);line-height:1.25;font-weight:700;letter-spacing:-.4px}
+.lead{margin:0;font-size:var(--fs-b);line-height:1.55;color:var(--muted-foreground)}
+.eyebrow{font-size:12px;font-weight:600;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.6px}
+.stack{display:flex;flex-direction:column;gap:8px;min-width:0}
+.stack>*{min-width:0}
+
+.btn{appearance:none;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;height:52px;width:100%;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);font-size:16px;font-weight:600;position:relative;transition:opacity .15s,transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.btn-brand{background:var(--accent)}
+.btn-dc{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;color:var(--foreground);border:1px solid #D4D4D4;height:48px;font-size:15px}
+.powered{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted-foreground)}
+
+.lbl-f{font-size:13px;font-weight:600;color:#262626}
+.help{font-size:12px;line-height:1.5;color:var(--muted-foreground)}
+.field{display:flex;align-items:center;min-width:0;max-width:100%;height:52px;border:1.5px solid #A3A3A3;border-radius:var(--radius);overflow:hidden;background:#fff;transition:border-color .15s,box-shadow .15s}
+.field:focus-within{border-color:var(--ring);box-shadow:0 0 0 3px var(--border-soft)}
+.field input,.field select{flex:1;width:100%;min-width:0;height:100%;border:0;outline:none;padding:0 13px;font-size:16px;font-weight:500;color:var(--foreground);background:transparent}
+.field .pre{display:flex;align-items:center;height:100%;padding:0 14px;font-size:15px;font-weight:600;color:#404040;border-right:1px solid var(--border);background:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px;color:#404040;cursor:pointer}
+.check input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:var(--muted);border:1px solid var(--border-soft);border-radius:var(--radius);font-size:12px;line-height:18px;color:var(--muted-foreground)}
+.note.ok{background:var(--success-bg);border-color:#BBF7D0;color:#14532D}
+.note.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
+.note b{display:block;margin-bottom:2px;color:inherit}
+
+/* seg control */
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.seg>*{min-width:0}
+.seg button{appearance:none;cursor:pointer;border:1.5px solid var(--border);background:#fff;border-radius:var(--radius);padding:12px 12px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.seg button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.seg .t1{font-size:14px;font-weight:600}
+.seg .t2{font-size:11.5px;color:var(--muted-foreground)}
+
+/* kv list */
+.kv{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:9px 14px;font-size:13.5px}
+.kv .k{color:var(--muted-foreground)}
+.kv .v{font-weight:600;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.card-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+
+/* success halo */
+.halo{width:64px;height:64px;border-radius:50%;background:var(--success-bg);color:var(--success);display:flex;align-items:center;justify-content:center;margin:4px auto 0}
+.halo svg{width:30px;height:30px;stroke-width:2.6}
+.amt{font-size:34px;font-weight:700;letter-spacing:-.8px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* loader */
+.ld-bar{height:3px;background:#F0F0F0;flex:none;overflow:hidden}
+.ld-bar i{display:block;height:3px;width:0;background:var(--accent)}
+.ld-bar i.run{animation:fill 2.6s linear forwards}
+@keyframes fill{to{width:100%}}
+.ld-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;gap:28px;text-align:center}
+.ld-list{list-style:none;margin:0;padding:16px;width:100%;max-width:380px;border:1px solid var(--border-soft);border-radius:14px;display:flex;flex-direction:column;gap:14px;text-align:left}
+.ld-list li{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--subtle);transition:color .2s}
+.ld-list .dot{width:22px;height:22px;border-radius:50%;border:2px solid #D4D4D4;display:flex;align-items:center;justify-content:center;flex:none;transition:all .2s}
+.ld-list li.run{color:#404040}
+
+.ld-list li.run .dot{border-color:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.ld-list li.run .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.ld-list li.ok{color:var(--foreground)}
+.ld-list li.ok .dot{background:var(--accent);border-color:var(--accent)}
+.ld-list .dot svg{display:none;width:12px;height:12px;stroke:#fff}
+.ld-list li.ok .dot svg{display:block}
+@keyframes pulse{50%{opacity:.4}}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* desktop side rail */
+
+.side-dc{width:min(340px,32cqw);padding-top:8px;display:flex;flex-direction:column;gap:24px}
+.sumcard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.sumrow{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.sumrow span:first-child{color:var(--muted-foreground)}
+.sumrow span:last-child{font-weight:600;text-align:right}
+.vsteps{list-style:none;margin:0;padding:0}
+.vsteps li{display:flex;gap:12px}
+.vsteps .rail{display:flex;flex-direction:column;align-items:center}
+.vsteps .n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none}
+.vsteps .n svg{width:12px;height:12px;stroke-width:3}
+.vsteps .bar{width:2px;flex:1;min-height:20px;background:var(--border)}
+.vsteps .tx{display:flex;flex-direction:column;gap:2px;padding:2px 0 18px}
+.vsteps .t1{font-size:14px;font-weight:600}
+.vsteps .t2{font-size:12px;color:var(--muted-foreground)}
+.vsteps .done .n{background:var(--success);color:#fff}
+.vsteps .done .bar{background:var(--accent)}
+.vsteps .cur .n{background:var(--accent);color:var(--accent-ink)}
+.vsteps .todo .n{border:1.5px solid #D4D4D4;color:var(--subtle)}
+.vsteps .todo .t1{font-weight:500;color:var(--muted-foreground)}
+.vsteps .todo .t2{color:var(--subtle)}
+
+/* mobile progress */
+.mprog{display:flex;align-items:center;gap:10px;padding:16px 20px 0}
+.mprog .s{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;white-space:nowrap}
+.mprog .n{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+.mprog .on .n{background:var(--accent);color:var(--accent-ink)}
+.mprog .off{color:var(--subtle);font-weight:500}
+.mprog .off .n{border:1.5px solid #D4D4D4;color:var(--subtle)}
+.mprog .ln{flex:1;height:1px;background:var(--border)}
+.mprog .ln.on{background:var(--accent)}
+
+/* =========================================================================
+   MERCHANT (AMC) THEME
+   ========================================================================= */
+.th-m{background:var(--m-bg);color:var(--m-ink)}
+.th-m .hd{border-bottom-color:var(--m-line)}
+.m-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;letter-spacing:-.2px}
+.m-mk{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+.m-col{width:100%;max-width:460px;min-height:0;max-height:100%;display:flex;flex-direction:column}
+.m-track{display:flex;gap:6px;padding:14px 18px 0;flex:none}
+.m-track span{flex:1;height:4px;border-radius:4px;background:var(--m-track)}
+.m-track span.on{background:var(--accent)}
+.m-main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 18px 4px;display:flex;flex-direction:column;gap:14px}
+.m-main>*{min-width:0}
+.m-card{background:#fff;border:1px solid var(--m-line);border-radius:14px;padding:16px}
+.m-eyebrow{font-size:12px;font-weight:600;color:var(--m-muted);text-transform:uppercase;letter-spacing:.6px}
+.m-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.m-grid>*{min-width:0}
+.m-v{overflow-wrap:anywhere}
+.m-k{font-size:12px;color:var(--m-muted)} .m-v{font-size:15px;font-weight:600}
+.m-ft{flex:none;padding:12px 18px 18px;background:#fff;border-top:1px solid var(--m-line);display:flex;flex-direction:column;gap:10px}
+.m-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px;color:#2D3340;cursor:pointer}
+.m-check input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.fundrow{display:flex;gap:12px;align-items:center}
+.fund-mk{width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none}
+@container (min-width:900px){
+  .th-m .body{padding:40px 32px;gap:40px;align-items:flex-start}
+  .m-track{padding:0}
+  .m-main{padding:18px 2px 4px}
+  .m-ft{border:1px solid var(--m-line);border-radius:14px;margin-top:14px;padding:14px 18px}
+  .m-col .grow{display:none}
+}
+
+/* =========================================================================
+   PAYMENT OPTIONS — summary strip + option rows, carried over from
+   verification-sdk.html (.cs / .co-sel / .ops / .op-r / .co-tr)
+   ========================================================================= */
+.cs{background:var(--muted);border:1px solid var(--border-soft);border-radius:var(--card-r);padding:14px 16px 12px;flex:none}
+.cs-r{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cs-r b{display:block;font-size:14px;font-weight:600}
+.cs-r span{display:block;font-size:11.5px;color:var(--muted-foreground);margin-top:3px;font-weight:500}
+.cs-a{font-size:17px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cs-l{height:1px;background:var(--border);margin:11px 0 10px}
+.cs-2{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;font-size:10.5px;font-weight:500;color:var(--muted-foreground)}
+.cs-2>div{min-width:0}
+.cs-2 b{display:block;font-weight:600;color:var(--foreground);margin-bottom:1px}
+.cs-2 span{display:block;overflow-wrap:anywhere;font-family:var(--mono);font-size:10px}
+.cs-2 .r{text-align:right;flex:none}
+.cs-2 .cs-ex{font-family:inherit;font-size:11px;color:var(--destructive);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.co-sel{text-align:center;margin:2px 0 -4px;flex:none}
+.co-sel b{display:block;font-size:14px;font-weight:600}
+.co-sel span{display:block;font-size:12px;font-weight:500;color:var(--muted-foreground);margin-top:1px}
+.ops{display:flex;flex-direction:column;gap:10px;min-width:0}
+.op-r{display:flex;align-items:center;width:100%;min-height:62px;padding:10px 14px;gap:13px;text-align:left;cursor:pointer;background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:var(--card-r);box-shadow:0 2px 12px rgba(16,24,40,.05);transition:background .15s,border-color .15s,transform .05s}
+.op-r:hover{background:var(--muted)}
+.op-r:active{transform:scale(.99)}
+.op-r[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.op-r img.ic{width:40px;height:40px;border-radius:50%;flex:none;display:block}
+.op-ic{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.op-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.op-t{flex:1;min-width:0;font-size:15px;font-weight:600;line-height:1.2;overflow-wrap:anywhere}
+.op-t small{display:block;font-size:11px;font-weight:500;color:var(--muted-foreground);margin-top:3px;white-space:normal}
+.op-tag{font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:3px 8px;border-radius:100px;background:var(--accent-soft);color:var(--accent);white-space:nowrap;flex:none}
+.op-r svg.chv{width:20px;height:20px;color:var(--muted-foreground);flex:none}
+.co-tr{margin-top:auto;padding-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:500;color:var(--muted-foreground)}
+.co-tr svg.shd{width:15px;height:15px;fill:var(--success);stroke:none}
+
+/* OTP grid (house pattern) */
+.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;min-width:0}
+
+.otp input{height:clamp(44px,13cqw,56px);width:100%;text-align:center;font-size:22px;font-weight:600;color:var(--foreground);border:1.5px solid #A3A3A3;border-radius:var(--radius);outline:none;background:#fff;caret-color:var(--ring);transition:border-color .15s,box-shadow .15s}
+.otp input:focus{border-color:var(--ring);box-shadow:0 0 0 3px var(--border-soft)}
+.otp input.filled{border-color:var(--ring)}
+.otp-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted-foreground)}
+.link{appearance:none;background:none;border:0;padding:6px 0;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:inherit}
+.link[disabled]{color:var(--subtle);text-decoration:none;cursor:default}
+
+/* card entry */
+.cardgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cardgrid>*{min-width:0}
+.cardbrand{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted-foreground)}
+.cardbrand i{width:30px;height:20px;border-radius:4px;background:var(--muted);border:1px solid var(--border);display:grid;place-items:center;font-style:normal;font-size:8px;font-weight:800;color:var(--muted-foreground)}
+
+/* bank-hosted chrome */
+.bk-mk{width:26px;height:26px;border-radius:7px;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.acct-pick{display:flex;flex-direction:column;gap:10px}
+.acct-pick label{display:flex;align-items:center;gap:12px;min-width:0;border:1.5px solid var(--border);border-radius:var(--radius);padding:13px 14px;cursor:pointer;background:#fff}
+.acct-pick label:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.acct-pick input{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.acct-pick label>span{min-width:0}
+.acct-pick .t1{font-size:14px;font-weight:600;display:block}
+.acct-pick .t2{font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums;display:block}
+.acct-pick .bal{margin-left:auto;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* =========================================================================
+   DEVELOPER CONSOLE  (Decentro-Demo.MD §9)
+   ========================================================================= */
+.dev-fab{position:fixed;z-index:90;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #262626;background:#0A0A0A;color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.2);
+  right:0;top:50%;transform:translateY(-50%);width:26px;height:56px;padding:0;border-radius:10px 0 0 10px;border-right:0;opacity:.85}
+.dev-fab .t{display:none}
+@media (min-width:900px){ .dev-fab{right:16px;top:auto;bottom:16px;transform:none;width:auto;height:40px;padding:0 14px;border-radius:999px;border-right:1px solid #262626;opacity:1} .dev-fab .t{display:inline} }
+.dev{position:fixed;z-index:95;background:#0B0B0C;color:#E5E5E5;display:flex;flex-direction:column;font-size:13px;transition:transform .25s ease;
+  left:0;right:0;bottom:0;height:min(72dvh,640px);border-radius:16px 16px 0 0;transform:translateY(105%)}
+.dev.open{transform:none}
+@media (min-width:900px){ .dev{left:auto;top:0;width:420px;height:auto;border-radius:0;transform:translateX(105%)} .dev.open{transform:none} }
+.dev-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #222}
+.dev-ttl{display:flex;align-items:center;gap:8px;font-weight:600;color:#fff}
+.dev-x{appearance:none;background:none;border:0;color:#A3A3A3;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px}
+.dev-x:hover{background:#1A1A1A;color:#fff}
+.dev-tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid #222}
+.dev-tab{appearance:none;background:none;border:0;color:#A3A3A3;padding:8px 10px 10px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent}
+.dev-tab[aria-selected="true"]{color:#fff;border-bottom-color:#0092FF}
+.dev-bd{flex:1;overflow:auto;padding:16px}
+.dev-pane{display:none;flex-direction:column;gap:16px}
+.dev-pane.on{display:flex}
+.dev-k{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#8A8A8A;margin-bottom:6px}
+.dev-own{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.own-m{background:#2E3A8C40;color:#A8B4FF} .own-d{background:#0092FF26;color:#7CC4FF} .own-b{background:#15803D26;color:#86E0AC}
+.dev ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:#D4D4D4;line-height:1.5}
+.dev code,.dev pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.dev pre{margin:0;background:#141416;border:1px solid #222;border-radius:8px;padding:10px 12px;overflow:auto;color:#C7E3FF;white-space:pre-wrap;word-break:break-word}
+.dev-flag{font-size:11px;color:#E8B012}
+.ev{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid #222;border-radius:8px;background:#121214}
+.ev-top{display:flex;justify-content:space-between;gap:8px}
+.ev-n{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#7CC4FF}
+.ev-t{font-size:11px;color:#8A8A8A;font-variant-numeric:tabular-nums}
+.ev-p{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#A3A3A3;white-space:pre-wrap;word-break:break-word}
+.dev-btn{appearance:none;border:1px solid #2A2A2A;background:#161618;color:#E5E5E5;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;text-align:left}
+.dev-btn:hover{background:#1E1E21;border-color:#3A3A3A}
+.dev-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dev-sw{display:flex;gap:8px}
+.dev-sw button{width:28px;height:28px;border-radius:50%;border:2px solid #333;cursor:pointer}
+.dev-sw button[aria-pressed="true"]{border-color:#fff}
+.dev-hint{font-size:12px;line-height:1.5;color:#A3A3A3}
+@media print{.dev,.dev-fab{display:none!important}}
+
+/* ══ Decentro-Demo.MD §6 responsive baseline ══ */
+html,body{overflow-x:hidden}
+img,svg,video,canvas{max-width:100%}
+@container (max-width:768px){
+  input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important}
+}
+input,select,textarea{max-width:100%}
+@media (pointer:coarse){ button,[role="button"],summary{min-height:44px} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+*{scrollbar-width:none!important;-ms-overflow-style:none!important}
+*::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+</style>
+
+</head>
+<body>
+
+<!-- Brand marks: Decentro wordmark and D mark, from the supplied SVGs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="decentro-logo" viewBox="110 110 2530 318"><polygon fill="#000000" points="1589.49 315.17 1435.68 121.4 1435.23 120.87 1375.32 120.87 1375.32 417.62 1435.64 417.62 1435.64 223.31 1589.45 417.08 1589.9 417.62 1649.81 417.62 1649.81 120.87 1589.49 120.87 1589.49 315.17"/><rect fill="#0092ff" x="120.6" y="357.11" width="60.28" height="60.28"/><path fill="#000000" d="M250.46,120.82H120.69v176.27h60.11v-116h68c62.42,0,102.83,34.9,102.83,88.17s-40.41,88.16-102.83,88.16h-7.73v60.25h9.39c96.25,0,162-59.37,162-148.41s-65.77-148.44-162-148.44h0Z"/><path fill="#000000" d="M2587.03,163.29c-27.04-27.03-64.55-41.85-105.7-41.85s-78.72,14.92-105.78,42c-27.07,27.08-42.04,64.69-42.04,105.81s14.93,78.69,42.04,105.8,64.64,42.01,105.78,42.01,78.72-14.87,105.74-41.85c27.02-26.99,42.04-64.69,42.04-105.95s-14.97-78.9-42.09-105.95l.01-.02ZM2418.6,203.4c16.03-16.67,38.28-25.86,62.69-25.86s46.6,9.19,62.69,25.86c16.09,16.67,24.97,40.13,24.97,65.84s-8.86,49.08-24.97,65.83c-16.1,16.75-38.28,25.86-62.69,25.86s-46.66-9.18-62.69-25.86-24.97-40.13-24.97-65.83,8.87-49.09,24.97-65.84Z"/><path fill="#000000" d="M1021.78,368.71l1.07,1.17c-1.7,1.91-3.46,3.77-5.28,5.59-24.05,24.05-56.46,38.49-92.31,41.38-4.43.35-8.91.53-13.43.53s-8.91-.18-13.29-.53c-4.49-.36-8.92-.9-13.29-1.61-2.18-.36-4.35-.77-6.49-1.21h-.02c-2.15-.45-4.28-.94-6.38-1.47h-.02c-.79-.2-1.58-.41-2.37-.62-3.15-.85-6.26-1.8-9.33-2.84-.77-.26-1.53-.53-2.3-.8-1.85-.66-3.69-1.36-5.51-2.1-1.21-.5-2.41-1-3.6-1.52,0,0-.01.01-.01,0-1.19-.52-2.37-1.06-3.55-1.61-.787-.367-.79-.367-.01,0-14.71-6.92-28.07-16.23-39.55-27.72-27.11-27.15-42.04-64.75-42.04-105.92s14.97-78.82,42.04-105.93c15.66-15.67,34.81-27.28,56.15-34.3.68-.22,1.38-.44,2.07-.66h.01c2.46-.76,4.95-1.47,7.47-2.12,1.68-.43,3.37-.84,5.07-1.21h.01c5.44-1.2,11-2.12,16.65-2.75,2.26-.25,4.53-.45,6.82-.61,3.79-.26,7.61-.39,11.47-.39.97,0,1.93,0,2.89.02.54.01,1.09.03,1.63.04.86.02,1.72.05,2.57.09.64.02,1.28.05,1.91.09.72.04,1.43.08,2.14.12.14.02.27.02.4.03,2.12.15,4.23.33,6.33.56,1.06.11,2.13.24,3.18.37.9.12,1.79.24,2.68.37,2.27.33,4.52.7,6.75,1.12,1.56.3,3.1.61,4.64.95s3.06.7,4.58,1.08c.76.19,1.52.39,2.27.59,2.27.62,4.51,1.28,6.72,1.98,21.69,6.94,41.15,18.61,57.01,34.48,2.01,2,3.95,4.06,5.81,6.19l-36.33,35.62-.56.48-5.5,5.4c-1.98-2.63-4.12-5.15-6.41-7.52-16.09-16.69-38.28-25.89-62.69-25.89-22.62,0-43.38,7.9-59.06,22.34-.19.17-.37.34-.55.51-1.05.98-2.08,2-3.08,3.04-16.09,16.77-24.96,40.19-24.96,65.91s8.94,49.21,24.96,65.9c.9.94,1.83,1.86,2.77,2.75,15.78,14.96,36.89,23.14,59.92,23.14,24.41,0,46.59-9.12,62.69-25.89,2.23-2.32,4.32-4.77,6.26-7.34l31.49,31.26.54.59,8.95,8.89v-.02Z"/><polygon fill="#000000" points="1710.09 180.9 1810.42 180.9 1810.42 416.9 1870.7 416.9 1870.7 180.9 1971.03 180.9 1971.03 120.62 1710.09 120.62 1710.09 180.9"/><path fill="#000000" d="M2273.07,226.87c0-61.16-49.34-106.01-114.55-106.01h-127.21v296.76h60.26v-85.62h45.95c3.62,0,7.36,0,11.06-.34l57.67,85.96h66.82l-64.21-97.33c41.46-16.21,64.21-50.5,64.21-93.42h0ZM2091.59,181.14h64.33c56.97,0,56.97,38.25,56.97,45.73,0,7.93,0,44.81-56.97,44.81h-64.33v-90.54h0Z"/><polygon fill="#000000" points="532.99 299.14 643.44 299.14 643.44 238.86 532.99 238.86 532.99 181.2 703.17 181.2 703.17 120.62 472.75 120.62 472.75 417.38 703.72 417.38 703.72 357.29 532.99 357.29 532.99 299.14"/><polygon fill="#000000" points="1144.31 299.14 1254.76 299.14 1254.76 238.86 1144.31 238.86 1144.31 181.2 1314.48 181.2 1314.48 120.62 1084.06 120.62 1084.06 417.38 1315.04 417.38 1315.04 357.29 1144.31 357.29 1144.31 299.14"/></symbol>
+  <symbol id="decentro-d" viewBox="0 0 1200 1200"><rect width="1200" height="1200" fill="#000000"/><rect fill="#0092ff" x="293.039" y="785.37" width="126.8" height="126.8"/><path fill="#ffffff" d="M566.192,287.794h-272.941v370.775h126.424v-244.028h143.03c131.299,0,216.297,73.414,216.297,185.467s-84.998,185.461-216.297,185.461h-16.265v126.736h19.752c202.461,0,340.769-124.883,340.769-312.179s-138.349-312.232-340.769-312.232Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 10h18M5 10v8M19 10v8M9 10v8M15 10v8M3 20h18M12 3l9 5H3z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></symbol>
+  <symbol id="i-upi" viewBox="0 0 24 24"><path d="M7 11 12 3l5 8-5 8-5-8Z"/><path d="M12 3v16"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></symbol>
+</svg>
+
+<div class="host" id="host">
+  <div class="device" id="device">
+    <div class="sbar" id="sbar" hidden><span id="sbTime">9:41</span><span class="island" id="island" hidden></span><span class="ico"><svg viewBox="0 0 24 16" fill="currentColor" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="1" width="3" height="13" rx="1" opacity=".35"/></svg><svg viewBox="0 0 26 13" fill="none" stroke="currentColor" aria-hidden="true"><rect x="1" y="1" width="21" height="11" rx="3" stroke-width="1.2" opacity=".4"/><rect x="2.6" y="2.6" width="15" height="7.8" rx="1.8" fill="currentColor" stroke="none"/><path d="M24 5v3" stroke-width="2" stroke-linecap="round" opacity=".4"/></svg></span></div>
+    <div class="stage" id="stage">
+<!-- =====================================================================
+@dev 01 · Merchant (AMC) · Start SIP
+Owner: merchant, white-label via --brand. No account capture here — the
+mandate collects it. This is the screen the RPD step used to sit after.
+====================================================================== -->
+<section class="screen th-m active" id="sc-merchant" aria-label="Arthveda Mutual Fund — start a SIP">
+  <header class="hd">
+    <span class="m-brand"><span class="m-mk">A</span>Arthveda MF</span>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Secure</span>
+  </header>
+  <div class="body">
+    <div class="m-col">
+      <div class="m-track"><span class="on"></span><span></span><span></span></div>
+      <div class="m-main">
+        <div class="stack"><p class="m-eyebrow">Step 1 of 3</p><h1>Start your SIP</h1></div>
+        <div class="m-card" style="display:flex;flex-direction:column;gap:14px">
+          <div class="fundrow">
+            <span class="fund-mk">AF</span>
+            <div style="min-width:0">
+              <div style="font-size:15px;font-weight:700">Arthveda Flexi Cap Fund</div>
+              <div style="font-size:12px;color:var(--m-muted)">Direct plan · Growth</div>
+            </div>
+          </div>
+          <div class="m-grid">
+            <div><div class="m-k">Monthly amount</div><div class="m-v">₹5,000</div></div>
+            <div><div class="m-k">Frequency</div><div class="m-v">Monthly</div></div>
+            <div><div class="m-k">SIP date</div><div class="m-v">5th</div></div>
+            <div><div class="m-k">Duration</div><div class="m-v">Until cancelled</div></div>
+          </div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span>Your bank account is captured and confirmed inside the mandate. There is no separate account-verification step before this.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="m-ft">
+        <label class="m-check"><input type="checkbox" id="mConsent">
+          <span>I have read the Scheme Information Document and authorise Arthveda to register an eNACH mandate for this SIP, including the first installment today.</span></label>
+        <button class="btn btn-brand" id="mGo" disabled onclick="go('sc-loader')"><span class="lbl">Set up mandate</span></button>
+        <p class="powered">Powered by <svg class="logo-sm"><use href="#decentro-logo"/></svg></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 02 · Decentro · Handoff loader
+====================================================================== -->
+<section class="screen" id="sc-loader" aria-label="Setting up the mandate">
+  <div class="ld-bar"><i id="ldFill"></i></div>
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-shield"/></svg>eNACH</span></header>
+  <div class="ld-main">
+    <div class="stack" style="align-items:center;gap:6px">
+      <h1>Setting up your mandate</h1>
+      <p class="lead">This takes a few seconds.</p>
+    </div>
+    <ul class="ld-list" id="ldList">
+      <li data-s="1"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>Validating the SIP request</li>
+      <li data-s="2"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>Checking destination account rules</li>
+      <li data-s="3"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>Opening the mandate session</li>
+    </ul>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 03 · Decentro · Mandate details (UI Stream)
+Replaces the old RPD screen. The account typed here is proved by the bank
+authentication that follows, not by a penny drop.
+====================================================================== -->
+<section class="screen" id="sc-mandate" aria-label="Mandate details">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="mprog m-only">
+    <span class="s on"><span class="n">1</span>Mandate</span><span class="ln"></span>
+    <span class="s off"><span class="n">2</span>First debit</span><span class="ln"></span>
+    <span class="s off"><span class="n">3</span>Done</span>
+  </div>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">eNACH mandate</p>
+          <h1>Authorise your SIP debits</h1>
+          <p class="lead">₹5,000 a month to Arthveda Asset Management, from 5 Dec 2026.</p></div>
+        <div class="stack">
+          <label class="lbl-f" for="fBank">Bank</label>
+          <div class="field"><select id="fBank"><option>Meridian Bank</option><option>Sierra Co-operative Bank</option><option>Northfield Bank</option></select></div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="fAcc">Account number</label>
+          <div class="field"><input id="fAcc" inputmode="numeric" value="000122444417"></div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="fIfsc">IFSC</label>
+          <div class="field"><input id="fIfsc" value="MRDN0000412"></div>
+        </div>
+        <div class="stack">
+          <span class="lbl-f">Authentication mode</span>
+          <div class="seg">
+            <button type="button" aria-pressed="true" data-auth="net_banking"><span class="t1">Net banking</span><span class="t2">Returns holder name</span></button>
+            <button type="button" aria-pressed="false" data-auth="debit_card"><span class="t1">Debit card</span><span class="t2">Card + PIN at bank</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn btn-dc" onclick="go(AUTH_MODE==='debit_card'?'sc-bank-card':'sc-bank')">Authenticate with bank</button>
+        <p class="powered"><svg class="i i-sm"><use href="#i-lock"/></svg>Hosted by Decentro · NPCI eNACH</p>
+      </div>
+    </div>
+    <aside class="side"><div class="side-dc">
+      <div class="sumcard">
+        <div class="sumrow"><span>Fund</span><span>Arthveda Flexi Cap</span></div>
+        <div class="sumrow"><span>Monthly</span><span>₹5,000</span></div>
+        <div class="sumrow"><span>First debit</span><span>Today</span></div>
+      </div>
+      <ul class="vsteps" id="vsteps"></ul>
+    </div></aside>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 04 · Bank · Mandate approval (simulated)
+====================================================================== -->
+<section class="screen" id="sc-bank" aria-label="Bank mandate approval">
+  <header class="hd">
+    <span class="m-brand"><span class="m-mk" style="background:#0F5132">M</span>Meridian Bank</span>
+    <span class="chip-m">Net banking</span>
+  </header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Mandate approval</p><h1>Approve this instruction</h1></div>
+        <div class="card-box">
+          <div class="kv">
+            <span class="k">Payee</span><span class="v">Arthveda Asset Mgmt</span>
+            <span class="k">Maximum amount</span><span class="v">₹5,000</span>
+            <span class="k">Frequency</span><span class="v">Monthly, as presented</span>
+            <span class="k">Valid from</span><span class="v">05 Dec 2026</span>
+            <span class="k">Valid until</span><span class="v">05 Dec 2046</span>
+            <span class="k">Debit account</span><span class="v">0001 2244 4417</span>
+          </div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="fCust">Customer ID</label>
+          <div class="field"><input id="fCust" value="MB4471092"></div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="fPin">Password</label>
+          <div class="field"><input id="fPin" type="password" value="demo"></div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span>Simulated bank screen for the demo. Nothing is submitted anywhere.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" onclick="go('sc-registered')">Approve mandate</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 04b · Bank · Mandate approval via debit card (hosted, simulated)
+NPCI debit-card authentication: card number, expiry and ATM PIN.
+====================================================================== -->
+<section class="screen" id="sc-bank-card" aria-label="Approve mandate with debit card">
+  <header class="hd">
+    <span class="m-brand"><span class="bk-mk" style="background:#1E3A8A">MB</span>Meridian Bank</span>
+    <span class="chip-m">Debit card authentication</span>
+  </header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Mandate approval</p>
+          <h1>Approve with your debit card</h1>
+          <p class="lead">Use the card issued on the account you are mandating.</p></div>
+        <div class="card-box">
+          <div class="kv">
+            <span class="k">Payee</span><span class="v">Arthveda Asset Mgmt</span>
+            <span class="k">Maximum amount</span><span class="v">&#8377;5,000</span>
+            <span class="k">Frequency</span><span class="v">Monthly, as presented</span>
+            <span class="k">Debit account</span><span class="v">0001 2244 4417</span>
+          </div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="mcNum">Debit card number</label>
+          <div class="field"><input id="mcNum" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000 0000" value="5241 8842 1907 8830"></div>
+          <div class="cardbrand"><i id="mcBrand">CARD</i><span id="mcBrandName">Card detected</span></div>
+        </div>
+        <div class="cardgrid">
+          <div class="stack">
+            <label class="lbl-f" for="mcExp">Expiry</label>
+            <div class="field"><input id="mcExp" inputmode="numeric" placeholder="MM/YY" value="08/29"></div>
+          </div>
+          <div class="stack">
+            <label class="lbl-f" for="mcPin">ATM PIN</label>
+            <div class="field"><input id="mcPin" type="password" inputmode="numeric" maxlength="6" placeholder="••••" value="4417"></div>
+          </div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-lock"/></svg>
+          <span>Your PIN is entered on the bank&rsquo;s page and is never seen by Arthveda or Decentro. Demo values only &mdash; nothing is submitted.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" id="mcGo" onclick="go('sc-registered')">Approve mandate</button>
+        <button class="link" onclick="go('sc-mandate')">Use net banking instead</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 05 · Decentro · Mandate registered
+The bank returns the holder name and account. Still unverified until money moves.
+====================================================================== -->
+<section class="screen" id="sc-registered" aria-label="Mandate registered">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="halo"><svg class="i"><use href="#i-check"/></svg></div>
+        <div class="stack" style="text-align:center;align-items:center">
+          <h1>Mandate registered</h1>
+          <p class="lead">Your bank confirmed the account holder on file.</p>
+        </div>
+        <div class="card-box">
+          <p class="eyebrow">Returned by the bank</p>
+          <div class="kv">
+            <span class="k">Account holder</span><span class="v">ANANYA R IYER</span>
+            <span class="k">Account</span><span class="v">XXXXXX4417</span>
+            <span class="k">IFSC</span><span class="v">MRDN0000412</span>
+            <span class="k">UMRN</span><span class="v">MRDN2612050041173</span>
+          </div>
+        </div>
+        <div class="note warn"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span><b>Not confirmed yet</b>The name and account are on file. The first debit is what confirms them.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn btn-dc" onclick="go('sc-pay')">Pay first installment</button>
+      </div>
+    </div>
+    <aside class="side"><div class="side-dc">
+      <div class="sumcard">
+        <div class="sumrow"><span>UMRN</span><span>MRDN2612…173</span></div>
+        <div class="sumrow"><span>Status</span><span>Registered</span></div>
+        <div class="sumrow"><span>Account</span><span>Pending first debit</span></div>
+      </div>
+      <ul class="vsteps" id="vsteps2"></ul>
+    </div></aside>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06 · Decentro · Payment page (option rows, from verification-sdk.html)
+Every rail is open. Whichever one the investor uses, the rail returns the
+payer account and name, so the debit itself is the verification event.
+====================================================================== -->
+<section class="screen" id="sc-pay" aria-label="Pay the first installment">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="cs">
+          <div class="cs-r">
+            <div><b>Arthveda Asset Management</b><span>SIP installment 1 of 240</span></div>
+            <div class="cs-a">&#8377; 5,000.00</div>
+          </div>
+          <div class="cs-l"></div>
+          <div class="cs-2">
+            <div><b>Txn ID</b><span id="payTxn">DCNTR8831TXN01</span></div>
+            <div class="r"><b>Expires In</b><span class="cs-ex"><span class="tv" id="payExp">09:45</span> mins</span></div>
+          </div>
+        </div>
+        <div class="co-sel"><b>Select a payment option</b><span>Any option works &mdash; the debit is what verifies the account</span></div>
+        <div class="ops" id="payOps"></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <div class="co-tr"><svg class="shd" viewBox="0 0 24 24"><path d="M12 1.8l8.5 3.2v6.2c0 5.3-3.6 9.9-8.5 11.3-4.9-1.4-8.5-6-8.5-11.3V5z"/><path d="M8.3 12.2l2.6 2.6 4.8-5.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>100% Trusted &amp; Secure Payments</div>
+      </div>
+    </div>
+    <aside class="side"><div class="side-dc">
+      <div class="sumcard">
+        <div class="sumrow"><span>Amount</span><span>&#8377;5,000</span></div>
+        <div class="sumrow"><span>Mandate</span><span>Registered</span></div>
+        <div class="sumrow"><span>Purpose</span><span>SIP installment 1</span></div>
+      </div>
+      <ul class="vsteps" id="vsteps3"></ul>
+    </div></aside>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06a · Decentro · Net banking — choose bank
+====================================================================== -->
+<section class="screen" id="sc-nb-pick" aria-label="Choose your bank">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Net banking · &#8377;5,000</p>
+          <h1>Choose your bank</h1>
+          <p class="lead">You will be taken to your bank to authorise the payment.</p></div>
+        <div class="ops" id="nbBanks"></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn btn-ghost" onclick="go('sc-pay')">Back to payment options</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06b · Bank · Net banking login (hosted, simulated)
+====================================================================== -->
+<section class="screen" id="sc-nb-login" aria-label="Bank login">
+  <header class="hd">
+    <span class="m-brand"><span class="bk-mk" id="nbMk1">MB</span><span id="nbName1">Meridian Bank</span></span>
+    <span class="chip-m">Net banking</span>
+  </header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Secure login</p><h1>Log in to pay</h1></div>
+        <div class="card-box">
+          <div class="kv">
+            <span class="k">Merchant</span><span class="v">Arthveda Asset Mgmt</span>
+            <span class="k">Amount</span><span class="v">&#8377;5,000.00</span>
+            <span class="k">Reference</span><span class="v">ARV-SIP-8831-01</span>
+          </div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="nbUser">Customer ID</label>
+          <div class="field"><input id="nbUser" value="MB4471092"></div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="nbPass">Password</label>
+          <div class="field"><input id="nbPass" type="password" value="demo"></div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span>Simulated bank screen for the demo. Nothing is submitted anywhere.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" onclick="go('sc-nb-confirm')">Log in</button>
+        <button class="link" onclick="go('sc-pay')">Cancel and go back</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06c · Bank · Choose account and confirm
+====================================================================== -->
+<section class="screen" id="sc-nb-confirm" aria-label="Confirm payment">
+  <header class="hd">
+    <span class="m-brand"><span class="bk-mk" id="nbMk2">MB</span><span id="nbName2">Meridian Bank</span></span>
+    <span class="chip-m">Signed in as ANANYA R IYER</span>
+  </header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Confirm payment</p><h1>&#8377;5,000.00 to Arthveda</h1></div>
+        <div class="stack">
+          <span class="lbl-f">Debit from</span>
+          <div class="acct-pick" id="nbAccts"></div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-shield"/></svg>
+          <span>Your bank sends the payer name and account back to the merchant with the payment confirmation.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" onclick="payNow('netbanking')">Pay &#8377;5,000.00</button>
+        <button class="link" onclick="go('sc-pay')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06d · Decentro · Debit card entry
+====================================================================== -->
+<section class="screen" id="sc-card" aria-label="Card details">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Debit card · &#8377;5,000</p><h1>Enter your card details</h1></div>
+        <div class="stack">
+          <label class="lbl-f" for="cdNum">Card number</label>
+          <div class="field"><input id="cdNum" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000 0000" value="5241 8842 1907 8830"></div>
+          <div class="cardbrand"><i id="cdBrand">CARD</i><span id="cdBrandName">Card detected</span></div>
+        </div>
+        <div class="cardgrid">
+          <div class="stack">
+            <label class="lbl-f" for="cdExp">Expiry</label>
+            <div class="field"><input id="cdExp" inputmode="numeric" placeholder="MM/YY" value="08/29"></div>
+          </div>
+          <div class="stack">
+            <label class="lbl-f" for="cdCvv">CVV</label>
+            <div class="field"><input id="cdCvv" type="password" inputmode="numeric" maxlength="4" placeholder="•••" value="123"></div>
+          </div>
+        </div>
+        <div class="stack">
+          <label class="lbl-f" for="cdName">Name on card</label>
+          <div class="field"><input id="cdName" value="ANANYA R IYER"></div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-lock"/></svg>
+          <span>Card details are tokenised by Decentro. Demo values only &mdash; nothing is submitted.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" onclick="go('sc-card-otp')">Pay &#8377;5,000.00</button>
+        <button class="link" onclick="go('sc-pay')">Use another method</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 06e · Issuer · 3-D Secure OTP (hosted, simulated)
+====================================================================== -->
+<section class="screen" id="sc-card-otp" aria-label="Card OTP">
+  <header class="hd">
+    <span class="m-brand"><span class="bk-mk" style="background:#1E3A8A">MB</span>Meridian Bank</span>
+    <span class="chip-m">3-D Secure</span>
+  </header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="stack"><p class="eyebrow">Verify it&rsquo;s you</p>
+          <h1>Enter the OTP</h1>
+          <p class="lead">Sent to the mobile registered with card ending 8830.</p></div>
+        <div class="card-box">
+          <div class="kv">
+            <span class="k">Merchant</span><span class="v">Arthveda Asset Mgmt</span>
+            <span class="k">Amount</span><span class="v">&#8377;5,000.00</span>
+            <span class="k">Card</span><span class="v">•••• 8830</span>
+          </div>
+        </div>
+        <div class="otp" id="cdOtp">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 1">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 2">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 3">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 4">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 5">
+          <input inputmode="numeric" maxlength="1" aria-label="OTP digit 6">
+        </div>
+        <div class="otp-meta"><span id="cdOtpHint">Demo OTP: 481902</span><button class="link" id="cdResend" disabled>Resend in 30s</button></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" id="cdOtpGo" disabled onclick="payNow('card')">Verify and pay</button>
+        <button class="link" onclick="go('sc-card')">Go back</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 07 · Decentro · Debit successful — account verified
+====================================================================== -->
+<section class="screen" id="sc-paid" aria-label="Payment successful">
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
+  <div class="body">
+    <div class="panel">
+      <div class="panel-in">
+        <div class="halo"><svg class="i"><use href="#i-check"/></svg></div>
+        <div class="stack" style="text-align:center;align-items:center">
+          <h1>₹5,000 debited</h1>
+          <p class="lead" id="paidAt">Today</p>
+        </div>
+        <div class="card-box">
+          <div class="kv">
+            <span class="k">Transaction ID</span><span class="v">DCNTR8831TXN01</span>
+            <span class="k">Paid via</span><span class="v" id="paidRail">Mandate account · AutoPay</span>
+            <span class="k">Payer account</span><span class="v" id="paidAcct">XXXXXX4417</span>
+            <span class="k">Payer name</span><span class="v" id="paidName">ANANYA R IYER</span>
+          </div>
+        </div>
+        <div class="note ok" id="paidMatch"></div>
+      </div>
+      <div class="grow"></div>
+      <div class="panel-ft">
+        <button class="btn" onclick="go('sc-merchant-done')">Return to Arthveda</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+@dev 08 · Merchant (AMC) · SIP active, verified account on file
+====================================================================== -->
+<section class="screen th-m" id="sc-merchant-done" aria-label="SIP active">
+  <header class="hd">
+    <span class="m-brand"><span class="m-mk">A</span>Arthveda MF</span>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-check"/></svg>SIP active</span>
+  </header>
+  <div class="body">
+    <div class="m-col">
+      <div class="m-track"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+      <div class="m-main">
+        <div class="stack"><p class="m-eyebrow">All done</p><h1>Your SIP is running</h1>
+          <p class="lead">First installment collected. The next one runs on its own.</p></div>
+        <div class="m-card">
+          <div class="m-grid">
+            <div><div class="m-k">Fund</div><div class="m-v">Arthveda Flexi Cap</div></div>
+            <div><div class="m-k">Amount</div><div class="m-v">₹5,000 monthly</div></div>
+            <div><div class="m-k">Next installment</div><div class="m-v">05 Dec 2026</div></div>
+            <div><div class="m-k">UMRN</div><div class="m-v" style="font-size:13px">MRDN2612050041173</div></div>
+          </div>
+        </div>
+        <div class="m-card" style="display:flex;flex-direction:column;gap:12px">
+          <p class="m-eyebrow">Verified bank account on file</p>
+          <div class="kv">
+            <span class="k">Holder</span><span class="v">ANANYA R IYER</span>
+            <span class="k">Account</span><span class="v">XXXXXX4417</span>
+            <span class="k">Verified via</span><span class="v">First SIP debit</span>
+          </div>
+        </div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span>Three steps instead of five. No reverse penny drop and no second mandate screen, and the merchant still ends with a verified account and a matching name.</span></div>
+      </div>
+      <div class="grow"></div>
+      <div class="m-ft">
+        <button class="btn btn-ghost" onclick="restart()">Restart demo</button>
+        <p class="powered">Powered by <svg class="logo-sm"><use href="#decentro-logo"/></svg></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+    </div>
+    <div class="hbar" id="hbar" hidden><i></i></div>
+  </div>
+</div>
+
+<div class="viewseg" id="viewSeg" role="group" aria-label="Device view" hidden>
+  <button type="button" data-view="full" aria-pressed="true">Desktop</button>
+  <button type="button" data-view="ipad" aria-pressed="false" title="iPad — 834 × 1112">iPad</button>
+  <button type="button" data-view="iphone" aria-pressed="false" title="iPhone — 393 × 852">iPhone</button>
+</div>
+
+<!-- Developer console -->
+<button class="dev-fab" id="dev-fab" type="button" aria-controls="dev" aria-expanded="false" onclick="toggleDev()" aria-label="Open developer console"><svg class="i i-sm"><use href="#i-code"/></svg><span class="t">Dev console</span></button>
+<aside class="dev" id="dev" aria-label="Developer console">
+  <div class="dev-hd">
+    <span class="dev-ttl"><svg class="i i-sm"><use href="#i-code"/></svg>Developer console</span>
+    <button class="dev-x" type="button" aria-label="Close developer console" onclick="toggleDev(false)"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="dev-tabs" role="tablist">
+    <button class="dev-tab" role="tab" aria-selected="true" data-tab="screen">Screen</button>
+    <button class="dev-tab" role="tab" aria-selected="false" data-tab="events">Events <span id="ev-count" style="color:#8A8A8A"></span></button>
+    <button class="dev-tab" role="tab" aria-selected="false" data-tab="controls">Controls</button>
+    <button class="dev-tab" role="tab" aria-selected="false" data-tab="spec">Spec</button>
+  </div>
+  <div class="dev-bd">
+    <div class="dev-pane on" data-pane="screen" id="dev-screen"></div>
+    <div class="dev-pane" data-pane="events"><div id="dev-events" style="display:flex;flex-direction:column;gap:8px"></div></div>
+    <div class="dev-pane" data-pane="controls">
+      <div><div class="dev-k">Jump to screen</div><div class="dev-grid" id="dev-jump"></div></div>
+      <div><div class="dev-k">Demo data</div>
+        <div class="dev-grid"><button class="dev-btn" type="button" onclick="restart()">Restart demo</button></div>
+        <p class="dev-hint" style="margin:8px 0 0">Happy path only. Failure and drop-off states are not drawn in this build.</p>
+      </div>
+      <div><div class="dev-k">Merchant brand (--brand)</div><div class="dev-sw" id="dev-sw"></div></div>
+    </div>
+    <div class="dev-pane" data-pane="spec">
+      <p class="dev-hint" style="margin:0">The flow as data — screens, owners, transitions and proposed API touchpoints. Endpoint names are placeholders for engineering to confirm.</p>
+      <button class="dev-btn" type="button" onclick="copySpec(this)">Copy flow spec (JSON)</button>
+      <pre id="dev-spec"></pre>
+    </div>
+  </div>
+</aside>
+
+<script>
+/* =========================================================================
+   DEVELOPER CONSOLE DATA
+   ========================================================================= */
+var DEV = {
+  'sc-merchant':{n:'01',t:'Start SIP',own:'m',owner:'AMC (merchant)',
+    comp:['Fund card','SIP summary grid','Consent checkbox','Primary button'],
+    states:['CTA disabled until consent is ticked'],
+    api:'Merchant backend -> Decentro: create mandate session {consumer, mandate{max_amount, frequency, start_date, end_date, category_code}, redirect_url, webhook_url} -> returns session_id + hosted URL.'},
+  'sc-loader':{n:'02',t:'Handoff loader',own:'d',owner:'Decentro',
+    comp:['Progress bar','Checklist with ticking states'],
+    states:['Auto-advances to 03'],
+    api:'Decentro: validate session token, load merchant config and destination account rules.'},
+  'sc-mandate':{n:'03',t:'Mandate details',own:'d',owner:'Decentro',
+    comp:['Bank select','Account number field','IFSC field','Auth-mode segmented control'],
+    states:['Net banking selected by default, routing to 04','Debit card routes to 04b, which asks for card number, expiry and ATM PIN','Aadhaar eSign not offered in this build'],
+    valid:['Account number 9-18 digits','IFSC 11 characters','Max amount >= SIP amount'],
+    api:'POST /v3/payments/mandate/create {reference_id, consumer, bank{account_number, ifsc, account_type}, mandate{...}, auth_mode, redirect_url} -> 201 {decentro_txn_id, status: PENDING_AUTHORIZATION, authorization_url}.'},
+  'sc-bank':{n:'04',t:'Bank approval',own:'b',owner:'Bank (hosted)',
+    comp:['Mandate instruction card','Customer ID and password fields'],
+    states:['Hosted by the bank; Decentro holds the session'],
+    api:'Bank -> NPCI -> Decentro: authorisation result, pushed to the merchant webhook.'},
+  'sc-bank-card':{n:'04b',t:'Mandate via debit card',own:'b',owner:'Bank (hosted)',
+    comp:['Mandate instruction card','Card number with brand detection','Expiry','ATM PIN field'],
+    states:['Reached only when debit card is the selected auth mode','Approve disabled until the PIN is at least 4 digits','Falls back to net banking via the link'],
+    valid:['Card issued on the account being mandated','ATM PIN 4-6 digits, entered on the bank page only'],
+    api:'NPCI debit-card authentication. Decentro never receives the PAN or the PIN; it gets the authorisation result and the account holder name.'},
+  'sc-registered':{n:'05',t:'Mandate registered',own:'d',owner:'Decentro',
+    comp:['Success halo','Bank-returned detail list','Pending-verification note'],
+    states:['account_verification stays pending_first_debit until a debit succeeds'],
+    api:'Webhook -> merchant: mandate.registered {umrn, account_holder_name, account_number, ifsc, bank_name, account_verification: "pending_first_debit"}. This payload is what removes the RPD step.'},
+  'sc-pay':{n:'06',t:'Payment page',own:'d',owner:'Decentro',
+    comp:['Summary strip (merchant, amount, txn id, expiry)','Option rows reused from verification-sdk.html','Trusted-payments footer'],
+    states:['All rails available: mandate AutoPay, UPI apps, net banking, debit card','Mandate AutoPay carries the Linked tag; the rest are ordinary options','Every rail returns payer account and name on success'],
+    api:'POST /v3/payments/mandate/transaction {umrn, reference_id, amount, purpose, installment_number, rail}. Response carries payer_account and payer_name whichever rail was used.'},
+  'sc-nb-pick':{n:'06a',t:'Net banking · choose bank',own:'d',owner:'Decentro',
+    comp:['Bank option rows','Back to payment options'],
+    states:['Popular banks listed; the rest would sit behind a search field'],
+    api:'POST /v3/payments/mandate/transaction {rail: "net_banking", bank_code} -> returns the bank redirect URL.'},
+  'sc-nb-login':{n:'06b',t:'Net banking · bank login',own:'b',owner:'Bank (hosted)',
+    comp:['Payment summary','Customer ID and password fields','Cancel link'],
+    states:['Hosted by the bank; Decentro holds the session','Cancel returns to the payment page with status CANCELLED'],
+    api:'Bank-hosted. Decentro polls transaction status until SUCCESS, FAILED or EXPIRED.'},
+  'sc-nb-confirm':{n:'06c',t:'Net banking · confirm',own:'b',owner:'Bank (hosted)',
+    comp:['Account picker with balances','Pay button','Cancel link'],
+    states:['The investor can pick an account other than the mandate account','account_match is computed server-side against the UMRN account'],
+    api:'Bank -> Decentro: payment result {payer_account, payer_name, bank_ref}.'},
+  'sc-card':{n:'06d',t:'Debit card · details',own:'d',owner:'Decentro',
+    comp:['Card number with brand detection','Expiry and CVV','Name on card'],
+    states:['Brand detected from the IIN as the number is typed','Card is tokenised; PAN is never stored by the merchant'],
+    valid:['Luhn check on the card number','Expiry in the future','CVV 3 digits, 4 for Amex'],
+    api:'POST /v3/payments/mandate/transaction {rail: "debit_card", card_token} -> returns the 3-D Secure URL.'},
+  'sc-card-otp':{n:'06e',t:'Debit card · 3-D Secure',own:'b',owner:'Issuing bank (hosted)',
+    comp:['Payment summary','6-box OTP input','Resend timer'],
+    states:['CTA disabled until 6 digits are entered','Any 6 digits pass in this build'],
+    valid:['Exactly 6 digits'],
+    api:'Issuer -> Decentro: 3DS result. A card debit returns the card last 4 and the name, not a bank account number, so account_match is not applicable on this rail.'},
+  'sc-paid':{n:'07',t:'Debit successful',own:'d',owner:'Decentro',
+    comp:['Success halo','Transaction detail list','Verification callout'],
+    states:['account_verification flips to verified on a successful debit'],
+    api:'200 {decentro_txn_id, status: SUCCESS, rail, payer_account, payer_name, account_verification: "verified", verified_via: "first_sip_debit", verified_at}.'},
+  'sc-merchant-done':{n:'08',t:'SIP active',own:'m',owner:'AMC (merchant)',
+    comp:['SIP summary grid','Verified account card'],
+    states:['Shown only after status is confirmed server-side, not from the redirect alone'],
+    api:'Redirect to merchant with {sip_status: ACTIVE, umrn, account_holder_name, account_number, ifsc, account_verification, verified_via, next_installment_date}. Name match against PAN/KRA stays with the merchant.'}
+};
+var ORDER=['sc-merchant','sc-loader','sc-mandate','sc-bank','sc-bank-card','sc-registered','sc-pay','sc-nb-pick','sc-nb-login','sc-nb-confirm','sc-card','sc-card-otp','sc-paid','sc-merchant-done'];
+var OWN={m:'own-m',d:'own-d',b:'own-b'};
+var STEPS=[['Mandate','Account authorised at the bank'],['First debit','Confirms the account'],['Verified return','Merchant gets the payload']];
+var STAGE={'sc-merchant':0,'sc-loader':0,'sc-mandate':0,'sc-bank':0,'sc-bank-card':0,'sc-registered':0,'sc-pay':1,'sc-nb-pick':1,'sc-nb-login':1,'sc-nb-confirm':1,'sc-card':1,'sc-card-otp':1,'sc-paid':1,'sc-merchant-done':2};
+
+var EVENTS=[], T={}, current=null, AUTH_MODE='net_banking';
+function $(s,r){return (r||document).querySelector(s)}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var IST_TIME=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+var IST_LONG=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+
+function log(name,payload){EVENTS.unshift({name:name,at:new Date(),payload:payload||{}});renderEvents()}
+function later(k,fn,ms){clearTimeout(T[k]);T[k]=setTimeout(fn,ms)}
+function stopAll(){for(var k in T){clearTimeout(T[k]);clearInterval(T[k])}}
+
+/* ---------- navigation ---------- */
+var enter={};
+function go(id){
+  stopAll();
+  $$('.screen').forEach(function(s){s.classList.toggle('active',s.id===id)});
+  current=id; window.scrollTo(0,0);
+  if(enter[id])enter[id]();
+  renderSteps();
+  log('screen.view',{screen:id});
+  renderDev();
+}
+enter['sc-loader']=function(){
+  var fill=$('#ldFill'); fill.classList.remove('run'); void fill.offsetWidth; fill.classList.add('run');
+  var items=$$('#ldList li');
+  items.forEach(function(li){li.classList.remove('run','ok')});
+  items[0].classList.add('run');
+  later('l1',function(){items[0].classList.replace('run','ok');items[1].classList.add('run')},850);
+  later('l2',function(){items[1].classList.replace('run','ok');items[2].classList.add('run')},1700);
+  later('l3',function(){items[2].classList.replace('run','ok')},2500);
+  later('l4',function(){go('sc-mandate')},2800);
+};
+enter['sc-pay']=function(){ renderPayOps(); };
+enter['sc-bank-card']=function(){ brandOf($('#mcNum').value.replace(/\D/g,''),'#mcBrand','#mcBrandName'); };
+enter['sc-nb-pick']=function(){ renderNbBanks(); };
+enter['sc-nb-login']=function(){ paintBank(); };
+enter['sc-nb-confirm']=function(){ paintBank(); renderNbAccts(); };
+enter['sc-card']=function(){ brandFromNumber(); };
+enter['sc-card-otp']=function(){
+  $$('#cdOtp input').forEach(function(i){i.value='';i.classList.remove('filled')});
+  $('#cdOtpGo').disabled=true;
+  var n=30, btn=$('#cdResend'); btn.disabled=true; btn.textContent='Resend in '+n+'s';
+  T.otpTick=setInterval(function(){
+    n--; if(n<=0){clearInterval(T.otpTick); btn.disabled=false; btn.textContent='Resend OTP'}
+    else btn.textContent='Resend in '+n+'s';
+  },1000);
+  setTimeout(function(){var f=$('#cdOtp input'); if(f)f.focus()},120);
+};
+enter['sc-paid']=function(){
+  var p=payerFor(PAID_RAIL);
+  $('#paidAt').textContent=IST_LONG.format(new Date())+' IST';
+  $('#paidRail').textContent=p.label;
+  $('#paidAcct').textContent=p.acct;
+  $('#paidName').textContent=p.name;
+  var m=$('#paidMatch');
+  if(p.match==='matched'){ m.className='note ok'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-check"/></svg><span><b>Bank account verified</b>The payer account matches the mandate account, and the name matches the holder on record.</span>'; }
+  else if(p.match==='different_account'){ m.className='note warn'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg><span><b>Paid from a different account</b>The name matches, but the debit came from an account other than the mandate account. The merchant decides whether that is good enough to mark the account verified.</span>'; }
+  else { m.className='note warn'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg><span><b>Card rail returns no account number</b>The issuer returns the card last 4 and the name, so there is no bank account to match against the mandate. Name match only on this rail.</span>'; }
+};
+function restart(){
+  EVENTS.length=0; renderEvents();
+  var c=$('#mConsent'); if(c){c.checked=false; $('#mGo').disabled=true}
+  go('sc-merchant');
+}
+
+/* ---------- side rail ---------- */
+function renderSteps(){
+  var st=STAGE[current]||0;
+  $$('#vsteps,#vsteps2,#vsteps3').forEach(function(ul){
+    ul.innerHTML=STEPS.map(function(s,i){
+      var cls=i<st?'done':(i===st?'cur':'todo');
+      var mark=i<st?'<svg class="i"><use href="#i-check"/></svg>':String(i+1);
+      return '<li class="'+cls+'"><span class="rail"><span class="n">'+mark+'</span>'+(i<STEPS.length-1?'<span class="bar"></span>':'')+'</span>'+
+             '<span class="tx"><span class="t1">'+s[0]+'</span><span class="t2">'+s[1]+'</span></span></li>';
+    }).join('');
+  });
+}
+
+/* ---------- payment options (verification-sdk row pattern) ---------- */
+var UPI_IC={"phonepe": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAFkklEQVR4nM2YXWwUVRTH/3dmZ2e/umyXlVaQxdaGtDVobUJNsJiITdOEVORJgyFogj4YRKIvJCgvPogmGgkJ+oARAkFNFJuSIALRqAX5MBQNFigLyMbSIst2u98znZnrw7S77e69s9NSEv9Pzdy75/56z7nn3HMJpRT/Dzlm9zNKoerUMIhOoRugFIRAFCASCAJ1ioSQ+4yiG1A0qoxD1SeQeKiyA7KDyBIE20zEpoM0A+k8VTS7dgtySfDJRBTmAkU3kFaQH7+nkHI7idcJa6AKKIqGRHZu4poQ+F1wSVyHWaGk8jSrzglGUT6ZeOWZoFCKRJZOxuYcyyURvwvlR4ztvbEc7hMHgPw4Hcsx/n/GrqQVZJTK8RG7mYxejI1E4ol/M6lYjhqYv8i37Nm6xpWL7AD5ZHjlaTtTimInTvuP3vjp8z9v30gwR90+52OdDz/1YlNNfcDaTsBD5Cl5bRqKQRFLWx2p4cH4V+/2jVwbtV7DVEtXXdfrrdULfbwJAkHIV8zL01BSeWRVLsjP+/86svN3OxAFOZziKzs7GpbX8iZ4Zfgm3VQMW4NacfR8eLqcI9wUfP6NlnBTkPcrTdW/ePNE5NwIb0JWRWEriruSzNMcJ4uc/nbwu/d/K/nY2hHevHsVgGxS3b6mNzaU5q0nyeKmfatrG6qZo16Z+GSgsCuUgscRiyYPf3S2/Pv5E9E9W/sAePzOzbtXefxOHsq4ou9968dckr1AwRUTKIrGdc03753SOEmm71DEpAk3BTfuaOdZADB6K/3DZ+eZQ5RO5LACCtvE4KlbN/pvW6xRoGntCK/b1mYx81xPJJNQmEOqNgVF5aCc6bliYb2EpnNDc+eG5sa22tAixgHWVP3k15eYFsyyTyiluoFYmu2gbSsOlHtn7+DLFfm2r+mNXoqXfHxwaXDLwW7m/AVVRACgc+IkevEOM0qil0vXKBcziocH45nRPHO+TuEAYBhslrv/sM/n9ud6Mbk3Pbsu9Oy6AKDxydqt+7sA7Fh/9PIZbiIZvppoaGNkPN2AAMCg7OvM6FCKZ3HWyibZkUspBJOIKVs30hkql2JnF82gAgAHZ0WLrDVr8Ww6BAgACGHHSlXQPWvTPAVqvMzvgkAcAESBMDuaJS0LLIxGL8fDjcH2tQ3RgXhsKN2+tsEOSmhxFRvFbMl4XZM3INfUB25fTzBHj+0d2Lij3eN3bvzAKuVPVX1rrXse+5Itmg4SBS7N4511PLtmki2E4V1+ZS6opYttTRRAyGSjKkvsyrzypeZfvxzIjbFPYN+hSN+hiPl3Ia/w5AnIrasfYQ6ZzdHE4ZEd7G1xuh2dr7VYLGBfz2xYJskiBwVTURiNiakVLzTWPVFTcaUs5zpi6qHm0NPrH2UOicJENine4jIKTbP9gFQs98m63nScXT4Kau0Ih5uCx/YNlGAFar2bD3R7A+yA9buI2zkdBcCdFOWUI4wOp/dsOh67mbSmKVdNXeDVTzurQuwU5RAw3zfhjmkoORXJPPc6l0+pB9/55crJIfscy9c0dL/dJnsk3oR57mJDX9qSxdKUV5JM9R+5fvjjs7z7WEELlwZXb1nOLMIFSSKC3mKElqJoBuKZCm8umqL/cfzv/u+vXT0zXDIUWuJfsuyBls76pSsWWrMSgvneaQWX0TOrOkYz9p6iFH0kMqrmdUGAL+QOLfbb+ZXJUe0h0vSjzX7UyI/TsZxNs7NRtZc4y1IM96lH0ehYDnP+kioQBMr2owIKAN1AIgeNd/WduSQRAQ/h1bsKb3GUIqPSrGr3IZMnQuB1lj6ozAzFlEGRVpDjN/fWckvwubibMTMUU5qBjEIVzW4AEQKXRDwSHOwieA8oBakaVTSM69ANlBQKgcAhEkmE7AAzNucYpUQmkEAqvBBX1H+doG2oEqv50AAAAABJRU5ErkJggg==", "gpay": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAFT0lEQVR4nM2YW2gcVRjH/9/M7M5eJptNk2wbqZcUeomKSEWxL9YKXtAWMS+9WJ9Uqg8+iLbFB/GCD76oL4oU1KI+VPsQhNDWWjFtRbBiY6nWJIUSKk2xSSDZzO7MzvXzYTZ7mczM7qZZ8P+ynLPnfOc353zn+845xMz4f0haXjdmmA67LjkMxwUziCAKEAmCwHGRiNqM4rgwbDYsmE4ZKQxVliBLJMcgNM1ETS6Q7aJQYsNu1m5FiRgUmURhJVAcFwUDJeumXCoZp3Qc0UANUAwb89rK+DURMgkkYqELFoWillgzVwSjKkWmtNwKCjPmNV70zRVWIkaZBJZuseDVy+toEweAksV5PeD7A1AKBgy7vXHPsFE0/EP4UQIbtUMFA77QUIfiMgKnrk1a0OsctS7aFg0sIyP9cH1kaHL4ijoJYHUi9/jaR565Y7sipRt2dBlFkxW57MDVHeQyZtTWQAp28a3z71+c+8tXr0jp59bvGrx9e0MLROhVygmrirJQYr3FKPLauTeXclS0mtMHcoP33DcYbSQtkyLXoDBjuokpOT3uzCxwb4Ye3iQOXR3+dOyL6PY51X5sLvPEk2+sXnt3WBsi5DqoilKyOK834Dh8xjx+sez0PR18Y9WHanw0rPG6UuLdock1qg1AlQVl76vYvjuscVea4uIiSl7nkhXFcWnKfXuo5Ku0kmNa30csFv0cUu6Dz/7oMNzaSn5qF154PdC4t0blzWw2yv5HzwWQxvSB5OzepfX7rbNdXX4+OvYNTV8PNO6lfQGA48KN9JPT487fU8GJQNIGfDU75H+29E5knx+TN8z7/uKfhgONeOdAAYATyaEZOPpr6NZy5Ku1RYWs/Up5T6UevRZl12fHQ3Ej52T4ghkRb4yu72uLzyavZKi8lGLW/wGkZEJRXA+FQ48z0yqfuBDqR2bmrJ0cqxT7BO3l1ETVej7u7/DA1jBTiwvkhjXAsVGrGLI4LGh691BtzQHlz9pi6bdcXYf7H+LcLWED2S4LAKTwI+fkbChmKXuCpZlKcXNsdlv836rpG0ndhxKykz1JAiQARKGuEJYKHGnWzJ6srTmo1GUA7dSttUXe+SLCpwSAIJAAQAy/qySXLLenUu/XtZFtT+LKRjFfKRoTneZVpcrRu4Z27IngACB4cSXi1tTfE7B4lLpsKb9XigpZL6UnahtoP9ZNCe3ex+mOaBRRgFD+CaHZ+WA8tWRiDq77cl9qXCELQJ+gfZ79pbKBAWg/9znz1T5852betqMhB9FiDoo4IZwedz45ZdTVbFGCmwKO0zN/aAPPLWarlIL3DnH/xmgULweVUaKvXpem3I9PGbOLgS4CRe0/bCQG+cghTF6mtILd+xpyAOhWSBJqjk7TaoM767fnzOOjqmYnj2y+q68+3nsyla35TSMNB/ZJFNCj1JxXABQNLhiRnQBdy3918nynPfpK/wHfXyx05gdGrOS9raJkEuTt07rb4YzK0Sna07Wpse6Zd26zj9ZyLKz/zuwIjethkgR0K0uO2QB0EwulZk/acfWMpI4AcOV+M/u0K2Zb5QDQmaxe6P135tkCR6SklVVMxKp0NYr4I1g2tZy3q2WICJ3JupH8KJKAbKrtLEToSvmfogLielxEZ7K9KNkUxUR/ZehTj2FzXl/OvTVaAgVzRKEAcFzM67Cjj76tKCYim6KwfNfgLY4ZRZM1s9mHzDARIR1HWo7ywqbGcBkFA7q5TJpkDEoidDJaQ/FkuygabNjNOhAREjFKxSAFecZNoVRk2mzYsJyAu5xAkESKiZAlBPrmCqP45AEJ1OCFuKH+A94PXOTApBXoAAAAAElFTkSuQmCC", "paytm": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAET0lEQVR4nM2YTWzcRBTH/zO2117b2W5JpGYpvbTJpQ0p7YGqpSrlAlHgAhWKOCRFqlIJIYh6gktPnHIKH6pyiJAquBRQ4BQJcQChqghxCESFSnQThETb3UITkuyH1157hoN3vbtee7PZeBP+p/F4xvPzvDdvZh7hnOP/IbGzbpzDcjhjxOFwGDgHIRAoBAJKeUwghHQZxWEwbW6WYTkVpDBUWYQsElkCbZuJtGkgmyFf4qbd7nc9KRJ0mQg0ChSHIW+iVN6RS8VjRIuhNdAWKKaN9WI0fk0IEgoUKdRgrVByJV60IsGoSZeJJm8HhXOsF3nVNyOWIpGEguYlFmy9DQNd4gBQKvMNI+D/A1DyJky7u3HPtFEw/UP4UQIbdUN5E77Q0IDCOAKnrkvaNBoctQGlYGI3dyTGUbBq49H6F0Vrt7fGolX7+RpKfldcxCfOUaiGLupVGVFHszblmaKC0u3V20KcV2KYh7JXJABg2XUoVnQomw4+e7S9z7nbPgXgMLCI7POXyV//3bjxd3lbvdxzoAjAaeJIL98bvzztPV5588LYhfNz1xc+/uRrAKkDj119Zzy9cm/m2vyliZHzZ4+PX54+MTww/t5br9wpul1evmOM9opX/zSHVPprkQEY6xPd2frgiDLW5z89OhwUAGuak1y+VP84c20eQKJHcx8zD9fmri9s5gqBjT2tlxkAlwOoWW1qJaC9w1wUHnqc+fHbj7zyiy+cmp15e/LiaFjjMz30y6MqgNM9wldH427l5AHJrTwWp9lTeljfqoFYWAP8vJR2C5ns6sTkdK5geK8eT/UBuHnrdja7FtofSIheodWB22acAhDDj5xvXPkQgK4pi0vLuYIxePjg6PNPu69OHh/QNeXuyv2Fb35qMUabEikoAEKC14+uKSeGB86dGZqdmXqQeQTg3NknXxo57b5N9fd+OvfupYkRD24nopSIAARKAm80g0eemH1/yi3fXbkP4PP572/euu01uPHFd+k/HmSyqxGguHGl+dbUoyu+mmefGR48fDBXMFwmj29xKZ15uKZrymuvPufrkpTauPxUJdDqMfufHPet6MVfllP9+1P9vS36Z7Krmey/AE4+NeBV/pBjh2LkkEzc8pBKE0Kt8rciA3BMbaAUKPp0UkHZLPG92pkBaDLR5eoeJLdcad2WIgGooQRcTHZHAq1Ek5rNtNjeoGixyhzUocik/QREVBIp4tUpaPBkXd5tlvr7cwNKfKu8Q7SShIbEgn/kpNpJ7qoDEYJ98YaR/CgiRVLtOgsh2K/6U1EB9ogJ2BfvLkpSJZLgrwxN9Zg23zCiv7dSEszRCgWAw7BuwG4++nYqSUBSDQ0ZW+TiOEfB4kWr3URmmAiBFoPWMli0NQbjyJswOr3cxyXoytbxcxu/azMUTG7a7ToQIVAkokoQgzxjRyieLJubNspOwF2OEogCkQTIIgJ9M2IUn1wgSnYaqf8DYu/IhZkN7FAAAAAASUVORK5CYII=", "bhim": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAEHUlEQVR4nM2Yz28bRRTHv29217v2Ok74JUElThSkppceOAASqsQlzY0DokcQnHLpGZU/oOLCIT0Teo64IbUuOZG0UbmUoBIX4ST8SGiCWuHE8a/d7M7jsPba3qztnbWD+F48O+uZ/eybt/PmPWJm/D+kpxvGDNdnKcln+BLMIIImoBGE4IxGRGeM4ks4HjsncP020iBUU4epk2lAJGaihAvkSdRa7HhJ5w1lGcibpIlJoPgSNQetk7FcKpshO4PhQCNQHA+Hjcn4NREKFixj4IINQzluccOdCEZXeZNsUwWFGYcN7vjmhGUZVLBw+hOLX72jJs6IA0DrhI+aMe8fg1Jz4Hhnu+85HupO9BFRlNg/DRE1j9LR1BxEtoY+FMmINd0Q8d0vQ5qtp+U7pTvJx1abfY7ah1J3oByRSity7augubG3cWt9KflQyai73eeJ3hsNVxGksovKHq0tBYZZ/XX1oHqgZJiG2335LkpNxUUC0eZ3ANCqBob56a8NAEqGYUa9s3WJsKupvptxeb3NtLZ073ExaKsbhvtQUn69pZV2o1Xd3/g27FY1TLCHhSjqHNsPeq/mH39vZ3JBW9UwrteD4qZAedT3sHyz+sH0q+GlkmGCsC8A+BIyxfrs/BDp+LD8IJ1hgnOgAOCn4KjsYr8U6RvHMH6AIlPYpN9RQo1jGAFAsvKZmLfWY/tTG6azQFKVBLS5MuhWgbvTHbeOD6r7SSb0JAsAeoIzcB/Hk020qrG3bs9evvmsHLTtjL149ebLhVeSzKkL6ACI1HxF/nw3dkVvz17+ovJ70H7txfOLVxfz5lTCOYUgHYAmaHBGE6etGJ/9+o23b6XlACCClCx51oTgrPRbFOXGhXeLh3+m5gCgCYj2T3KanVMcl+bG5yDqJKqmkTQyy0fFXuwbl+aKf/8StOcuXLn23jVVDqCdHHVQdGomOzdRuN9bU9+8+X5xezXkuD7/uSpEBwUIw6GpxyQmMarsorIXcNDC8kP2x+fQRHs36W4pdmb0sPaxzZqihWU+d/H+zv0xOQDYmbYNukUN26SGy8PDEZfXQ45722sAPnrr40/e+TQ1hy6Q7Zigr76SN6naGsbCT0piYZnPXQTw4x8PP7tyfX52PjUHgN78OZozP6vxwJBU2SWrwNnp4Grrafn8S6+Pw2FoeN7uemgUxZP4p/5f1OeI8ILdVwKKRkJdYCanXkdT53guFy1FxQTljIbp7NmizOTI0KKdA0s9jsdHTfW8dZQExXMMQwHgSxw24aU5+sbL0DCTo0HxbkQtjhl1lxtu0kLmIBHBzsA2h3lhomdIRs1BwiB1WlkDeWugMdRQAnkSdYcdL6kDEcEyKGdAj/OMsVBCuR47Hk78mFxOEHSNDA2mjljfnDBKRAGQoBEV4pH6F6eHAYvtc/3wAAAAAElFTkSuQmCC"};
+var PAY_OPTS=[
+  {id:'autopay',n:'Mandate account · AutoPay',s:'Meridian Bank XXXXXX4417 · ANANYA R IYER',tag:'Linked',ic:'i-repeat'},
+  {id:'phonepe',n:'PhonePe',img:'phonepe'},
+  {id:'gpay',n:'Google Pay',img:'gpay'},
+  {id:'paytm',n:'PayTM',img:'paytm'},
+  {id:'bhim',n:'BHIM',img:'bhim'},
+  {id:'netbanking',n:'Net banking',s:'All major banks',ic:'i-bank'},
+  {id:'card',n:'Debit card',s:'Visa, Mastercard, RuPay',ic:'i-card'}
+];
+function renderPayOps(){
+  var g=$('#payOps'); if(!g)return;
+  g.innerHTML=PAY_OPTS.map(function(o){
+    var left=o.img?'<img class="ic" src="'+UPI_IC[o.img]+'" alt="">':'<span class="op-ic"><svg><use href="#'+o.ic+'"/></svg></span>';
+    return '<button class="op-r" type="button" data-pay="'+o.id+'">'+left+
+      '<span class="op-t">'+esc(o.n)+(o.s?'<small>'+esc(o.s)+'</small>':'')+'</span>'+
+      (o.tag?'<span class="op-tag">'+esc(o.tag)+'</span>':'')+
+      '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+  }).join('');
+  $$('#payOps .op-r').forEach(function(b){
+    b.addEventListener('click',function(){
+      var id=b.dataset.pay;
+      log('payment.option_selected',{rail:id});
+      if(id==='netbanking'){ go('sc-nb-pick'); return; }
+      if(id==='card'){ go('sc-card'); return; }
+      payNow(id);
+    });
+  });
+}
+
+/* Banks offered on the net-banking rail. Meridian is the mandate bank. */
+var NB_BANKS=[
+  {id:'meridian',n:'Meridian Bank',mk:'MB',c:'#1E3A8A',mandate:true},
+  {id:'sierra',n:'Sierra Co-operative Bank',mk:'SC',c:'#0F5132'},
+  {id:'northfield',n:'Northfield Bank',mk:'NB',c:'#7A1F4B'},
+  {id:'calder',n:'Calder Bank',mk:'CB',c:'#B4530A'},
+  {id:'trillium',n:'Trillium Bank',mk:'TB',c:'#155E75'}
+];
+var NB_BANK=NB_BANKS[0], NB_ACCT='XXXXXX4417';
+function renderNbBanks(){
+  var g=$('#nbBanks'); if(!g)return;
+  g.innerHTML=NB_BANKS.map(function(b){
+    return '<button class="op-r" type="button" data-bank="'+b.id+'">'+
+      '<span class="op-ic" style="background:'+b.c+';color:#fff;font-size:12px;font-weight:700">'+b.mk+'</span>'+
+      '<span class="op-t">'+esc(b.n)+(b.mandate?'<small>Your mandate account is here</small>':'')+'</span>'+
+      (b.mandate?'<span class="op-tag">Linked</span>':'')+
+      '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+  }).join('');
+  $$('#nbBanks .op-r').forEach(function(b){
+    b.addEventListener('click',function(){
+      NB_BANK=NB_BANKS.filter(function(x){return x.id===b.dataset.bank})[0];
+      log('netbanking.bank_selected',{bank:NB_BANK.id});
+      go('sc-nb-login');
+    });
+  });
+}
+function paintBank(){
+  ['#nbMk1','#nbMk2'].forEach(function(s){var el=$(s); if(el){el.textContent=NB_BANK.mk; el.style.background=NB_BANK.c}});
+  ['#nbName1','#nbName2'].forEach(function(s){var el=$(s); if(el)el.textContent=NB_BANK.n});
+}
+function renderNbAccts(){
+  var g=$('#nbAccts'); if(!g)return;
+  var accts = NB_BANK.mandate
+    ? [{no:'XXXXXX4417',t:'Savings account',bal:'1,24,860.00',d:true},{no:'XXXXXX9021',t:'Salary account',bal:'38,410.00'}]
+    : [{no:'XXXXXX2290',t:'Savings account',bal:'86,230.00',d:true}];
+  g.innerHTML=accts.map(function(a,i){
+    return '<label><input type="radio" name="nbacct" value="'+a.no+'"'+(a.d?' checked':'')+'>'+
+      '<span><span class="t1">'+a.t+'</span><span class="t2">'+a.no+'</span></span>'+
+      '<span class="bal">&#8377;'+a.bal+'</span></label>';
+  }).join('');
+  NB_ACCT=accts[0].no;
+  $$('#nbAccts input').forEach(function(r){r.addEventListener('change',function(){NB_ACCT=r.value})});
+}
+
+/* Rail-specific payer identity shown on the success screen and in the payload. */
+function payerFor(rail){
+  if(rail==='card')       return {label:'Debit card · Meridian Bank',acct:'Card •••• 8830',name:'ANANYA R IYER',match:'not_applicable'};
+  if(rail==='netbanking') return {label:'Net banking · '+NB_BANK.n,acct:NB_ACCT,name:'ANANYA R IYER',match:(NB_ACCT==='XXXXXX4417')?'matched':'different_account'};
+  if(rail==='autopay')    return {label:'Mandate account · AutoPay',acct:'XXXXXX4417',name:'ANANYA R IYER',match:'matched'};
+  return {label:'UPI · '+(RAIL_LABEL[rail]||rail).replace('UPI · ',''),acct:'XXXXXX4417',name:'ANANYA R IYER',match:'matched'};
+}
+function payNow(rail){
+  PAID_RAIL=rail;
+  var p=payerFor(rail);
+  log('transaction.success',{rail:rail,amount:5000,payer_account:p.acct,payer_name:p.name,account_match:p.match});
+  go('sc-paid');
+}
+var PAID_RAIL='autopay';
+var RAIL_LABEL={autopay:'Mandate account · AutoPay',phonepe:'UPI · PhonePe',gpay:'UPI · Google Pay',paytm:'UPI · PayTM',bhim:'UPI · BHIM',netbanking:'Net banking',card:'Debit card'};
+
+/* ---------- dev console ---------- */
+function renderDev(){
+  var d=DEV[current]; if(!d)return;
+  var list=function(a){return a&&a.length?'<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''};
+  $('#dev-screen').innerHTML=
+    '<div><div class="dev-k">Screen</div><div style="font-size:16px;font-weight:600;color:#fff">'+d.n+' · '+esc(d.t)+'</div>'+
+      '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="dev-own '+OWN[d.own]+'">'+esc(d.owner)+'</span><code style="color:#8A8A8A">#'+current+'</code></div></div>'+
+    '<div><div class="dev-k">Components</div>'+list(d.comp)+'</div>'+
+    '<div><div class="dev-k">States</div>'+list(d.states)+'</div>'+
+    (d.valid?'<div><div class="dev-k">Validation</div>'+list(d.valid)+'</div>':'')+
+    '<div><div class="dev-k">API touchpoint <span class="dev-flag">proposed</span></div><pre>'+esc(d.api)+'</pre></div>';
+  $$('#dev-jump .dev-btn').forEach(function(b){b.style.borderColor=b.dataset.id===current?'#0092FF':''});
+}
+function renderEvents(){
+  var el=$('#dev-events'); if(!el)return;
+  $('#ev-count').textContent=EVENTS.length?'('+EVENTS.length+')':'';
+  el.innerHTML=EVENTS.length?EVENTS.map(function(e){
+    return '<div class="ev"><div class="ev-top"><span class="ev-n">'+esc(e.name)+'</span><span class="ev-t">'+IST_TIME.format(e.at)+' IST</span></div>'+
+      (e.payload&&Object.keys(e.payload).length?'<div class="ev-p">'+esc(JSON.stringify(e.payload))+'</div>':'')+'</div>';
+  }).join(''):'<p class="dev-hint">No events yet.</p>';
+}
+function toggleDev(force){
+  var el=$('#dev'); var open=(typeof force==='boolean')?force:!el.classList.contains('open');
+  el.classList.toggle('open',open);
+  $('#dev-fab').setAttribute('aria-expanded',open);
+  $('#dev-fab').style.display=open?'none':'flex';
+  if(open)renderDev();
+}
+function copySpec(btn){
+  var txt=$('#dev-spec').textContent;
+  var done=function(){btn.textContent='Copied';later('cp',function(){btn.textContent='Copy flow spec (JSON)'},1400)};
+  try{navigator.clipboard.writeText(txt).then(done,done)}catch(e){done()}
+}
+$$('.dev-tab').forEach(function(t){t.addEventListener('click',function(){
+  $$('.dev-tab').forEach(function(x){x.setAttribute('aria-selected',x===t)});
+  $$('.dev-pane').forEach(function(p){p.classList.toggle('on',p.dataset.pane===t.dataset.tab)});
+})});
+(function buildJump(){
+  var g=$('#dev-jump');
+  ORDER.forEach(function(id){
+    var d=DEV[id], b=document.createElement('button');
+    b.type='button'; b.className='dev-btn'; b.dataset.id=id; b.textContent=d.n+' · '+d.t;
+    b.addEventListener('click',function(){go(id)});
+    g.appendChild(b);
+  });
+})();
+(function buildSwatches(){
+  var g=$('#dev-sw');
+  ['#2E3A8C','#0E4F47','#B4530A','#7A1F4B'].forEach(function(c,i){
+    var b=document.createElement('button'); b.type='button'; b.style.background=c;
+    b.setAttribute('aria-pressed',i===0?'true':'false'); b.title=c;
+    b.addEventListener('click',function(){
+      document.documentElement.style.setProperty('--brand',c);
+      $$('#dev-sw button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+      log('demo.brand_changed',{brand:c});
+    });
+    g.appendChild(b);
+  });
+})();
+$('#dev-spec').textContent=JSON.stringify({
+  flow:'mutual-fund-sip-mandate-first',
+  premise:'The eNACH mandate replaces the reverse penny drop. The first SIP debit from the mandate account is the verification event.',
+  removed:['reverse_penny_drop','second_mandate_screen'],
+  screens:ORDER.map(function(id){var d=DEV[id];return {id:id,n:d.n,title:d.t,owner:d.owner,api:d.api}})
+},null,2);
+
+/* ---------- screen wiring ---------- */
+$('#mConsent').addEventListener('change',function(){$('#mGo').disabled=!this.checked});
+$$('.seg button').forEach(function(b){b.addEventListener('click',function(){
+  $$('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+  AUTH_MODE=b.dataset.auth;
+  log('mandate.auth_mode',{auth_mode:AUTH_MODE});
+})});
+(function wireMandateCard(){
+  var num=$('#mcNum'); if(!num)return;
+  num.addEventListener('input',function(){
+    var d=this.value.replace(/\D/g,'').slice(0,19);
+    this.value=d.replace(/(.{4})(?=.)/g,'$1 ');
+    brandOf(d,'#mcBrand','#mcBrandName');
+  });
+  $('#mcExp').addEventListener('input',function(){
+    var d=this.value.replace(/\D/g,'').slice(0,4);
+    this.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
+  });
+  $('#mcPin').addEventListener('input',function(){
+    this.value=this.value.replace(/\D/g,'');
+    $('#mcGo').disabled=this.value.length<4;
+  });
+})();
+
+function brandOf(d,bSel,nSel){
+  var b='CARD', n='Card detected';
+  if(/^4/.test(d)){b='VISA';n='Visa'}
+  else if(/^(5[1-5]|2[2-7])/.test(d)){b='MC';n='Mastercard'}
+  else if(/^(60|65|81|82|508)/.test(d)){b='RUPAY';n='RuPay'}
+  else if(/^3[47]/.test(d)){b='AMEX';n='American Express'}
+  else if(!d){n='Enter your card number'}
+  var be=$(bSel), ne=$(nSel);
+  if(be)be.textContent=b; if(ne)ne.textContent=n;
+}
+function brandFromNumber(){
+  var el=$('#cdNum'); if(!el)return;
+  brandOf(el.value.replace(/\D/g,''),'#cdBrand','#cdBrandName');
+}
+(function wireCard(){
+  var num=$('#cdNum'); if(!num)return;
+  num.addEventListener('input',function(){
+    var d=this.value.replace(/\D/g,'').slice(0,19);
+    this.value=d.replace(/(.{4})(?=.)/g,'$1 ');
+    brandFromNumber();
+  });
+  var exp=$('#cdExp');
+  exp.addEventListener('input',function(){
+    var d=this.value.replace(/\D/g,'').slice(0,4);
+    this.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
+  });
+  $('#cdCvv').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'')});
+})();
+(function wireOtp(){
+  var boxes=$$('#cdOtp input'); if(!boxes.length)return;
+  function sync(){
+    var full=boxes.every(function(b){return b.value.length===1});
+    $('#cdOtpGo').disabled=!full;
+  }
+  boxes.forEach(function(b,i){
+    b.addEventListener('input',function(){
+      this.value=this.value.replace(/\D/g,'').slice(0,1);
+      this.classList.toggle('filled',!!this.value);
+      if(this.value&&i<boxes.length-1)boxes[i+1].focus();
+      sync();
+    });
+    b.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&!this.value&&i>0){boxes[i-1].focus()}
+    });
+    b.addEventListener('paste',function(e){
+      var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+      if(!t)return; e.preventDefault();
+      boxes.forEach(function(x,j){x.value=t[j]||'';x.classList.toggle('filled',!!x.value)});
+      boxes[Math.min(t.length,boxes.length)-1].focus(); sync();
+    });
+  });
+  $('#cdResend').addEventListener('click',function(){
+    if(this.disabled)return;
+    log('card.otp_resent',{});
+    enter['sc-card-otp']();
+  });
+})();
+
+/* =========================================================================
+   DEVICE VIEWS — Full / iPad / iPhone (Decentro-Demo.MD §6.5)
+   Only a desktop gets to choose. A real phone or tablet IS the device, so
+   there the flow just fills the screen and answers to the real viewport.
+   ========================================================================= */
+var FRAMES={
+  full:null,
+  ipad:{w:834,h:1112,bz:14,r:40,sr:26,sb:28,hb:22,cls:'ipad'},
+  iphone:{w:393,h:852,bz:11,r:56,sr:45,sb:50,hb:30,cls:'iphone'}
+};
+var mqPhone=matchMedia('(max-width:700px)'), mqCoarse=matchMedia('(pointer:coarse)');
+function deviceClass(){
+  if(mqPhone.matches)return 'phone';
+  if(mqCoarse.matches&&innerWidth<1200)return 'tablet';
+  return 'desktop';
+}
+var view='full';
+try{var sv=localStorage.getItem('mfsip-view'); if(sv&&FRAMES.hasOwnProperty(sv))view=sv}catch(e){}
+
+function fitDevice(){
+  var f=FRAMES[view], dev=$('#device');
+  if(!f||deviceClass()!=='desktop'){dev.style.transform='';return}
+  var box=$('#host').getBoundingClientRect();
+  var W=f.w+f.bz*2, H=f.h+f.bz*2;
+  var s=Math.min((box.width-36)/W,(box.height-36)/H,1);
+  dev.style.transform='translate(-50%,-50%)'+(s<1?' scale('+s.toFixed(4)+')':'');
+}
+function applyView(){
+  var isDesktop=deviceClass()==='desktop';
+  $('#viewSeg').hidden=!isDesktop;
+  var f=isDesktop?FRAMES[view]:null, dev=$('#device'), host=$('#host');
+  host.classList.toggle('framed',!!f);
+  dev.className='device'+(f?' framed '+f.cls:'');
+  $('#sbar').hidden=!f; $('#hbar').hidden=!f;
+  $('#island').hidden=!(f&&f.cls==='iphone');
+  if(f){
+    dev.style.setProperty('--dw',f.w+'px'); dev.style.setProperty('--dh',f.h+'px');
+    dev.style.setProperty('--dbz',f.bz+'px'); dev.style.setProperty('--dr',f.r+'px');
+    dev.style.setProperty('--dsr',f.sr+'px'); dev.style.setProperty('--dsb',f.sb+'px');
+    dev.style.setProperty('--dhb',f.hb+'px');
+  }else{ dev.style.transform=''; }
+  $$('#viewSeg button').forEach(function(b){
+    b.setAttribute('aria-pressed',String(isDesktop&&b.dataset.view===view));
+  });
+  fitDevice();
+}
+function setView(v){
+  if(!FRAMES.hasOwnProperty(v))return;
+  view=v;
+  try{localStorage.setItem('mfsip-view',v)}catch(e){}
+  log('demo.device_view',{view:v});
+  applyView();
+}
+$$('#viewSeg button').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view)})});
+addEventListener('resize',fitDevice);
+addEventListener('orientationchange',applyView);
+mqPhone.addEventListener('change',applyView);
+mqCoarse.addEventListener('change',applyView);
+if(window.ResizeObserver)new ResizeObserver(fitDevice).observe($('#host'));
+(function clock(){
+  var el=$('#sbTime'); if(!el)return;
+  var t=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'numeric',minute:'2-digit',hour12:false});
+  var tick=function(){el.textContent=t.format(new Date())};
+  tick(); setInterval(tick,30000);
+})();
+applyView();
+
+current='sc-merchant'; renderSteps(); renderEvents(); renderDev();
+log('demo.loaded',{flow:'mf-sip-mandate-first'});
+</script>
+</body>
+</html>
