@@ -449,7 +449,7 @@ mandate collects it. This is the screen the RPD step used to sit after.
       <div class="grow"></div>
       <div class="m-ft">
         <label class="m-check"><input type="checkbox" id="mConsent">
-          <span>I have read the Scheme Information Document and authorise Arthveda to register an eNACH mandate for this SIP, including the first installment today.</span></label>
+          <span>I have read the Scheme Information Document and authorise Arthveda to register a UPI Autopay mandate for this SIP.</span></label>
         <button class="btn btn-brand" id="mGo" disabled onclick="go('sc-loader')"><span class="lbl">Set up mandate</span></button>
         <p class="powered">Powered by <svg class="logo-sm"><use href="#decentro-logo"/></svg></p>
       </div>
@@ -463,7 +463,7 @@ mandate collects it. This is the screen the RPD step used to sit after.
 <section class="screen" id="sc-loader" aria-label="Setting up the mandate">
   <div class="ld-bar"><i id="ldFill"></i></div>
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
-    <span class="chip-m"><svg class="i i-sm"><use href="#i-shield"/></svg>eNACH</span></header>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-shield"/></svg>UPI Autopay</span></header>
   <div class="ld-main">
     <div class="stack" style="align-items:center;gap:6px">
       <h1>Setting up your mandate</h1>
@@ -488,8 +488,8 @@ back once the mandate is live.
     <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
   <div class="mprog m-only">
     <span class="s on"><span class="n">1</span>Mandate</span><span class="ln"></span>
-    <span class="s off"><span class="n">2</span>First debit</span><span class="ln"></span>
-    <span class="s off"><span class="n">3</span>Done</span>
+    <span class="s off"><span class="n">2</span>Approval</span><span class="ln"></span>
+    <span class="s off"><span class="n">3</span>Verified</span>
   </div>
   <div class="body">
     <div class="panel">
@@ -637,12 +637,12 @@ step before the journey has nothing left to do.
           <div class="note ok"><svg class="i i-sm" style="margin-top:1px"><use href="#i-check"/></svg>
             <span><b>Matched</b>Middle name abbreviated on the bank record. Above Arthveda&rsquo;s 85 threshold, so it passes without review.</span></div>
         </div>
-        <div class="note warn"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
-          <span><b>Account not yet debited</b>The details are confirmed and the name matches. The first debit still has to clear.</span></div>
+        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
+          <span><b>Nothing left for a penny drop to prove</b>Arthveda has the account number, the IFSC and a name that matches the PAN record &mdash; before a rupee has moved. Debits now run against the mandate on the 5th of each month.</span></div>
       </div>
       <div class="grow"></div>
       <div class="panel-ft">
-        <button class="btn btn-dc" onclick="go('sc-pay')">Pay first installment</button>
+        <button class="btn btn-ghost" onclick="restart()">Restart demo</button>
       </div>
     </div>
     <aside class="side"><div class="side-dc">
@@ -1012,7 +1012,7 @@ var DEV = {
     api:'GET /v3/payments/upi/autopay/mandate/status?decentro_mandate_id=<value> — query params only, no body. ACTIVE here is the proof the payer approved with their MPIN.'},
   'sc-registered':{n:'06',t:'Mandate active · account + name match',own:'d',owner:'Decentro',
     comp:['Success halo','Bank account card','Name match card with score','Pending-debit note'],
-    states:['account_number, ifsc and holder name arrive with the ACTIVE mandate','name_match score 94 against the PAN/KRA name; merchant threshold 85','Below threshold would hold the folio for manual review'],
+    states:['account_number, ifsc and holder name arrive with the ACTIVE mandate','name_match score 94 against the PAN/KRA name; merchant threshold 85','Below threshold would hold the folio for manual review','Final screen of the demo — verification is complete here, before any debit'],
     api:'Status response data carries {mandate_status: "ACTIVE", account_number, ifsc, account_holder_name, bank_name, name_match:{pan_name, account_name, score, result}}. This payload is what removes the RPD step.'},
   'sc-pay':{n:'07',t:'Payment page',own:'d',owner:'Decentro',
     comp:['Summary strip (merchant, amount, txn id, expiry)','Option rows reused from verification-sdk.html','Trusted-payments footer'],
@@ -1051,8 +1051,8 @@ var DEV = {
 };
 var ORDER=['sc-merchant','sc-loader','sc-mandate','sc-upi','sc-awaiting','sc-registered','sc-pay','sc-nb-pick','sc-nb-login','sc-nb-confirm','sc-card','sc-card-otp','sc-paid','sc-merchant-done'];
 var OWN={m:'own-m',d:'own-d',b:'own-b'};
-var STEPS=[['Mandate','Account authorised at the bank'],['First debit','Confirms the account'],['Verified return','Merchant gets the payload']];
-var STAGE={'sc-merchant':0,'sc-loader':0,'sc-mandate':0,'sc-upi':0,'sc-awaiting':0,'sc-registered':0,'sc-pay':1,'sc-nb-pick':1,'sc-nb-login':1,'sc-nb-confirm':1,'sc-card':1,'sc-card-otp':1,'sc-paid':1,'sc-merchant-done':2};
+var STEPS=[['Mandate','Set up in your UPI app'],['Approval','UPI PIN at your bank'],['Verified','Account and name returned']];
+var STAGE={'sc-merchant':0,'sc-loader':0,'sc-mandate':0,'sc-upi':1,'sc-awaiting':1,'sc-registered':2,'sc-pay':2,'sc-nb-pick':2,'sc-nb-login':2,'sc-nb-confirm':2,'sc-card':2,'sc-card-otp':2,'sc-paid':2,'sc-merchant-done':2};
 
 var EVENTS=[], T={}, current=null;
 function $(s,r){return (r||document).querySelector(s)}
@@ -1303,7 +1303,8 @@ $$('.dev-tab').forEach(function(t){t.addEventListener('click',function(){
 $('#dev-spec').textContent=JSON.stringify({
   flow:'mutual-fund-sip-mandate-first',
   product:'UPI Autopay (not eNACH)',
-  premise:'The Autopay mandate returns the bank account and a PAN name match once it is ACTIVE, so the reverse penny drop before the journey has nothing left to do. The first debit then confirms the account can be debited.',
+  premise:'The Autopay mandate returns the bank account and a PAN name match once it is ACTIVE, so the reverse penny drop before the journey has nothing left to do. The journey ends there — verification is complete before any money moves.',
+  ends_at:'sc-registered — mandate ACTIVE, account and name match returned',
   removed:['reverse_penny_drop','second_mandate_screen','enach_netbanking_and_debit_card_auth'],
   auth:'MPIN inside the UPI app — the only auth mode on Autopay',
   screens:ORDER.map(function(id){var d=DEV[id];return {id:id,n:d.n,title:d.t,owner:d.owner,api:d.api}})
