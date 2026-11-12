@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Decentro · Mutual Fund SIP — mandate-first (no RPD)</title>
+<title>Decentro · Mutual Fund SIP — UPI Autopay, mandate-first</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,6 +38,7 @@
   --lh:1.55; --hd:60px;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%;overflow:hidden}
 body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--foreground);background:var(--background);-webkit-font-smoothing:antialiased;line-height:var(--lh)}
 button,input,select{font-family:inherit}
@@ -297,9 +298,14 @@ h1{margin:0;font-size:var(--fs-h);line-height:1.25;font-weight:700;letter-spacin
 .op-r svg.chv{width:20px;height:20px;color:var(--muted-foreground);flex:none}
 .co-tr{margin-top:auto;padding-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:500;color:var(--muted-foreground)}
 .co-tr svg.shd{width:15px;height:15px;fill:var(--success);stroke:none}
+.srcacct{display:flex;align-items:center;gap:11px;min-width:0;border:1px solid var(--border);border-radius:10px;padding:12px 13px;background:var(--muted)}
+.srcacct .bk{width:32px;height:32px;border-radius:8px;background:#fff;border:1px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted-foreground);flex:none}
+.srcacct .t1{font-size:13.5px;font-weight:600}
+.srcacct .t2{font-size:11.5px;color:var(--muted-foreground);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 
 /* OTP grid (house pattern) */
 .otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;min-width:0}
+.otp.pin4{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:280px}
 
 .otp input{height:clamp(44px,13cqw,56px);width:100%;text-align:center;font-size:22px;font-weight:600;color:var(--foreground);border:1.5px solid #A3A3A3;border-radius:var(--radius);outline:none;background:#fff;caret-color:var(--ring);transition:border-color .15s,box-shadow .15s}
 .otp input:focus{border-color:var(--ring);box-shadow:0 0 0 3px var(--border-soft)}
@@ -472,11 +478,12 @@ mandate collects it. This is the screen the RPD step used to sit after.
 </section>
 
 <!-- =====================================================================
-@dev 03 · Decentro · Mandate details (UI Stream)
-Replaces the old RPD screen. The account typed here is proved by the bank
-authentication that follows, not by a penny drop.
+@dev 03 · Decentro · UPI Autopay mandate setup (UI Stream)
+Autopay authorises through a UPI app, not a bank page. No account number is
+typed here — the app already knows the linked account, and that is what comes
+back once the mandate is live.
 ====================================================================== -->
-<section class="screen" id="sc-mandate" aria-label="Mandate details">
+<section class="screen" id="sc-mandate" aria-label="Set up UPI Autopay">
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
     <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
   <div class="mprog m-only">
@@ -487,40 +494,32 @@ authentication that follows, not by a penny drop.
   <div class="body">
     <div class="panel">
       <div class="panel-in">
-        <div class="stack"><p class="eyebrow">eNACH mandate</p>
+        <div class="stack"><p class="eyebrow">UPI Autopay</p>
           <h1>Authorise your SIP debits</h1>
-          <p class="lead">₹5,000 a month to Arthveda Asset Management, from 5 Dec 2026.</p></div>
-        <div class="stack">
-          <label class="lbl-f" for="fBank">Bank</label>
-          <div class="field"><select id="fBank"><option>Meridian Bank</option><option>Sierra Co-operative Bank</option><option>Northfield Bank</option></select></div>
-        </div>
-        <div class="stack">
-          <label class="lbl-f" for="fAcc">Account number</label>
-          <div class="field"><input id="fAcc" inputmode="numeric" value="000122444417"></div>
-        </div>
-        <div class="stack">
-          <label class="lbl-f" for="fIfsc">IFSC</label>
-          <div class="field"><input id="fIfsc" value="MRDN0000412"></div>
-        </div>
-        <div class="stack">
-          <span class="lbl-f">Authentication mode</span>
-          <div class="seg">
-            <button type="button" aria-pressed="true" data-auth="net_banking"><span class="t1">Net banking</span><span class="t2">Returns holder name</span></button>
-            <button type="button" aria-pressed="false" data-auth="debit_card"><span class="t1">Debit card</span><span class="t2">Card + PIN at bank</span></button>
+          <p class="lead">&#8377;5,000 a month to Arthveda Asset Management, from 5 Dec 2026.</p></div>
+        <div class="card-box">
+          <p class="eyebrow">Mandate being set up</p>
+          <div class="kv">
+            <span class="k">Payee</span><span class="v">Arthveda Asset Mgmt</span>
+            <span class="k">Maximum amount</span><span class="v">&#8377;5,000</span>
+            <span class="k">Frequency</span><span class="v">Monthly</span>
+            <span class="k">Valid from</span><span class="v">05 Dec 2026</span>
+            <span class="k">Valid until</span><span class="v">05 Dec 2046</span>
           </div>
         </div>
+        <div class="co-sel"><b>Approve in your UPI app</b><span>Only UPI apps on this phone are shown</span></div>
+        <div class="ops" id="upiApps"></div>
       </div>
       <div class="grow"></div>
       <div class="panel-ft">
-        <button class="btn btn-dc" onclick="go(AUTH_MODE==='debit_card'?'sc-bank-card':'sc-bank')">Authenticate with bank</button>
-        <p class="powered"><svg class="i i-sm"><use href="#i-lock"/></svg>Hosted by Decentro · NPCI eNACH</p>
+        <p class="powered"><svg class="i i-sm"><use href="#i-lock"/></svg>Hosted by Decentro &middot; NPCI UPI Autopay</p>
       </div>
     </div>
     <aside class="side"><div class="side-dc">
       <div class="sumcard">
         <div class="sumrow"><span>Fund</span><span>Arthveda Flexi Cap</span></div>
-        <div class="sumrow"><span>Monthly</span><span>₹5,000</span></div>
-        <div class="sumrow"><span>First debit</span><span>Today</span></div>
+        <div class="sumrow"><span>Monthly</span><span>&#8377;5,000</span></div>
+        <div class="sumrow"><span>Mandate</span><span>UPI Autopay</span></div>
       </div>
       <ul class="vsteps" id="vsteps"></ul>
     </div></aside>
@@ -528,101 +527,86 @@ authentication that follows, not by a penny drop.
 </section>
 
 <!-- =====================================================================
-@dev 04 · Bank · Mandate approval (simulated)
+@dev 04 · UPI app · Mandate approval and UPI PIN (hosted, simulated)
+The app shows the account it will debit. Approval is MPIN only — Autopay has
+no net-banking or debit-card auth mode.
 ====================================================================== -->
-<section class="screen" id="sc-bank" aria-label="Bank mandate approval">
-  <header class="hd">
-    <span class="m-brand"><span class="m-mk" style="background:#0F5132">M</span>Meridian Bank</span>
-    <span class="chip-m">Net banking</span>
+<section class="screen" id="sc-upi" aria-label="Approve autopay in your UPI app">
+  <header class="hd" id="upiHd">
+    <span class="m-brand"><span class="bk-mk" id="upiMk">P</span><span id="upiName">PhonePe</span></span>
+    <span class="chip-m">UPI Autopay</span>
   </header>
   <div class="body">
     <div class="panel">
       <div class="panel-in">
-        <div class="stack"><p class="eyebrow">Mandate approval</p><h1>Approve this instruction</h1></div>
+        <div class="stack"><p class="eyebrow">Autopay request</p>
+          <h1>Approve this mandate</h1>
+          <p class="lead">Arthveda Asset Management wants to set up a monthly autopay.</p></div>
         <div class="card-box">
           <div class="kv">
             <span class="k">Payee</span><span class="v">Arthveda Asset Mgmt</span>
-            <span class="k">Maximum amount</span><span class="v">₹5,000</span>
+            <span class="k">Up to</span><span class="v">&#8377;5,000 per month</span>
             <span class="k">Frequency</span><span class="v">Monthly, as presented</span>
-            <span class="k">Valid from</span><span class="v">05 Dec 2026</span>
             <span class="k">Valid until</span><span class="v">05 Dec 2046</span>
-            <span class="k">Debit account</span><span class="v">0001 2244 4417</span>
           </div>
         </div>
         <div class="stack">
-          <label class="lbl-f" for="fCust">Customer ID</label>
-          <div class="field"><input id="fCust" value="MB4471092"></div>
+          <span class="lbl-f">Debit account</span>
+          <div class="srcacct">
+            <span class="bk">MB</span>
+            <span style="min-width:0"><span class="t1" style="display:block">Meridian Bank</span><span class="t2">XXXXXX4417 &middot; ANANYA R IYER</span></span>
+          </div>
+          <p class="help">The account linked to this UPI app. Arthveda does not see it until the mandate is live.</p>
         </div>
         <div class="stack">
-          <label class="lbl-f" for="fPin">Password</label>
-          <div class="field"><input id="fPin" type="password" value="demo"></div>
+          <span class="lbl-f">Enter UPI PIN</span>
+          <div class="otp pin4" id="upiPin">
+            <input type="password" inputmode="numeric" maxlength="1" aria-label="UPI PIN digit 1">
+            <input type="password" inputmode="numeric" maxlength="1" aria-label="UPI PIN digit 2">
+            <input type="password" inputmode="numeric" maxlength="1" aria-label="UPI PIN digit 3">
+            <input type="password" inputmode="numeric" maxlength="1" aria-label="UPI PIN digit 4">
+          </div>
+          <p class="help">Demo PIN: any 4 digits. Your PIN is entered inside the UPI app and is never seen by Arthveda or Decentro.</p>
         </div>
-        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
-          <span>Simulated bank screen for the demo. Nothing is submitted anywhere.</span></div>
       </div>
       <div class="grow"></div>
       <div class="panel-ft">
-        <button class="btn" onclick="go('sc-registered')">Approve mandate</button>
+        <button class="btn" id="upiGo" disabled onclick="go('sc-awaiting')">Approve mandate</button>
+        <button class="link" onclick="go('sc-mandate')">Use another UPI app</button>
       </div>
     </div>
   </div>
 </section>
 
 <!-- =====================================================================
-@dev 04b · Bank · Mandate approval via debit card (hosted, simulated)
-NPCI debit-card authentication: card number, expiry and ATM PIN.
+@dev 05 · Decentro · Awaiting confirmation
+mandate/link returned PENDING. ACTIVE only comes from the status call, so
+PENDING and ACTIVE are never shown as one step.
 ====================================================================== -->
-<section class="screen" id="sc-bank-card" aria-label="Approve mandate with debit card">
-  <header class="hd">
-    <span class="m-brand"><span class="bk-mk" style="background:#1E3A8A">MB</span>Meridian Bank</span>
-    <span class="chip-m">Debit card authentication</span>
-  </header>
-  <div class="body">
-    <div class="panel">
-      <div class="panel-in">
-        <div class="stack"><p class="eyebrow">Mandate approval</p>
-          <h1>Approve with your debit card</h1>
-          <p class="lead">Use the card issued on the account you are mandating.</p></div>
-        <div class="card-box">
-          <div class="kv">
-            <span class="k">Payee</span><span class="v">Arthveda Asset Mgmt</span>
-            <span class="k">Maximum amount</span><span class="v">&#8377;5,000</span>
-            <span class="k">Frequency</span><span class="v">Monthly, as presented</span>
-            <span class="k">Debit account</span><span class="v">0001 2244 4417</span>
-          </div>
-        </div>
-        <div class="stack">
-          <label class="lbl-f" for="mcNum">Debit card number</label>
-          <div class="field"><input id="mcNum" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000 0000" value="5241 8842 1907 8830"></div>
-          <div class="cardbrand"><i id="mcBrand">CARD</i><span id="mcBrandName">Card detected</span></div>
-        </div>
-        <div class="cardgrid">
-          <div class="stack">
-            <label class="lbl-f" for="mcExp">Expiry</label>
-            <div class="field"><input id="mcExp" inputmode="numeric" placeholder="MM/YY" value="08/29"></div>
-          </div>
-          <div class="stack">
-            <label class="lbl-f" for="mcPin">ATM PIN</label>
-            <div class="field"><input id="mcPin" type="password" inputmode="numeric" maxlength="6" placeholder="••••" value="4417"></div>
-          </div>
-        </div>
-        <div class="note"><svg class="i i-sm" style="margin-top:1px"><use href="#i-lock"/></svg>
-          <span>Your PIN is entered on the bank&rsquo;s page and is never seen by Arthveda or Decentro. Demo values only &mdash; nothing is submitted.</span></div>
-      </div>
-      <div class="grow"></div>
-      <div class="panel-ft">
-        <button class="btn" id="mcGo" onclick="go('sc-registered')">Approve mandate</button>
-        <button class="link" onclick="go('sc-mandate')">Use net banking instead</button>
-      </div>
+<section class="screen" id="sc-awaiting" aria-label="Awaiting mandate confirmation">
+  <div class="ld-bar"><i id="awFill"></i></div>
+  <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
+    <span class="chip-m"><svg class="i i-sm"><use href="#i-shield"/></svg>UPI Autopay</span></header>
+  <div class="ld-main">
+    <div class="stack" style="align-items:center;gap:6px">
+      <h1>Confirming your mandate</h1>
+      <p class="lead">Waiting for your bank and NPCI to confirm.</p>
     </div>
+    <ul class="ld-list" id="awList">
+      <li data-s="1"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>Mandate created &middot; PENDING</li>
+      <li data-s="2"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>UPI PIN approved at your bank</li>
+      <li data-s="3"><span class="dot"><svg class="i"><use href="#i-check"/></svg></span>Mandate status &middot; ACTIVE</li>
+    </ul>
   </div>
 </section>
 
 <!-- =====================================================================
-@dev 05 · Decentro · Mandate registered
-The bank returns the holder name and account. Still unverified until money moves.
+@dev 06 · Decentro · Mandate active — account details and name match
+This payload is the whole argument. Account number, IFSC and holder name
+arrive here, and the name is matched against the PAN/KRA record, so the RPD
+step before the journey has nothing left to do.
 ====================================================================== -->
-<section class="screen" id="sc-registered" aria-label="Mandate registered">
+<section class="screen" id="sc-registered" aria-label="Mandate active">
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
     <span class="chip-m"><svg class="i i-sm"><use href="#i-lock"/></svg>Arthveda MF</span></header>
   <div class="body">
@@ -630,20 +614,31 @@ The bank returns the holder name and account. Still unverified until money moves
       <div class="panel-in">
         <div class="halo"><svg class="i"><use href="#i-check"/></svg></div>
         <div class="stack" style="text-align:center;align-items:center">
-          <h1>Mandate registered</h1>
-          <p class="lead">Your bank confirmed the account holder on file.</p>
+          <h1>Mandate is active</h1>
+          <p class="lead">Your bank account came back with it.</p>
         </div>
         <div class="card-box">
-          <p class="eyebrow">Returned by the bank</p>
+          <p class="eyebrow">Bank account returned</p>
           <div class="kv">
             <span class="k">Account holder</span><span class="v">ANANYA R IYER</span>
             <span class="k">Account</span><span class="v">XXXXXX4417</span>
             <span class="k">IFSC</span><span class="v">MRDN0000412</span>
-            <span class="k">UMRN</span><span class="v">MRDN2612050041173</span>
+            <span class="k">Bank</span><span class="v">Meridian Bank</span>
+            <span class="k">Mandate ID</span><span class="v">MND8831ARV0412</span>
           </div>
         </div>
+        <div class="card-box">
+          <p class="eyebrow">Name match &middot; PAN / KRA</p>
+          <div class="kv">
+            <span class="k">Name on PAN</span><span class="v">ANANYA RAJESH IYER</span>
+            <span class="k">Name on account</span><span class="v">ANANYA R IYER</span>
+            <span class="k">Match score</span><span class="v">94 / 100</span>
+          </div>
+          <div class="note ok"><svg class="i i-sm" style="margin-top:1px"><use href="#i-check"/></svg>
+            <span><b>Matched</b>Middle name abbreviated on the bank record. Above Arthveda&rsquo;s 85 threshold, so it passes without review.</span></div>
+        </div>
         <div class="note warn"><svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg>
-          <span><b>Not confirmed yet</b>The name and account are on file. The first debit is what confirms them.</span></div>
+          <span><b>Account not yet debited</b>The details are confirmed and the name matches. The first debit still has to clear.</span></div>
       </div>
       <div class="grow"></div>
       <div class="panel-ft">
@@ -652,9 +647,9 @@ The bank returns the holder name and account. Still unverified until money moves
     </div>
     <aside class="side"><div class="side-dc">
       <div class="sumcard">
-        <div class="sumrow"><span>UMRN</span><span>MRDN2612…173</span></div>
-        <div class="sumrow"><span>Status</span><span>Registered</span></div>
-        <div class="sumrow"><span>Account</span><span>Pending first debit</span></div>
+        <div class="sumrow"><span>Mandate</span><span>ACTIVE</span></div>
+        <div class="sumrow"><span>Account</span><span>XXXXXX4417</span></div>
+        <div class="sumrow"><span>Name match</span><span>94 / 100</span></div>
       </div>
       <ul class="vsteps" id="vsteps2"></ul>
     </div></aside>
@@ -662,7 +657,7 @@ The bank returns the holder name and account. Still unverified until money moves
 </section>
 
 <!-- =====================================================================
-@dev 06 · Decentro · Payment page (option rows, from verification-sdk.html)
+@dev 07 · Decentro · Payment page (option rows, from verification-sdk.html)
 Every rail is open. Whichever one the investor uses, the rail returns the
 payer account and name, so the debit itself is the verification event.
 ====================================================================== -->
@@ -703,7 +698,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 06a · Decentro · Net banking — choose bank
+@dev 07a · Decentro · Net banking — choose bank
 ====================================================================== -->
 <section class="screen" id="sc-nb-pick" aria-label="Choose your bank">
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
@@ -725,7 +720,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 06b · Bank · Net banking login (hosted, simulated)
+@dev 07b · Bank · Net banking login (hosted, simulated)
 ====================================================================== -->
 <section class="screen" id="sc-nb-login" aria-label="Bank login">
   <header class="hd">
@@ -764,7 +759,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 06c · Bank · Choose account and confirm
+@dev 07c · Bank · Choose account and confirm
 ====================================================================== -->
 <section class="screen" id="sc-nb-confirm" aria-label="Confirm payment">
   <header class="hd">
@@ -792,7 +787,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 06d · Decentro · Debit card entry
+@dev 07d · Decentro · Debit card entry
 ====================================================================== -->
 <section class="screen" id="sc-card" aria-label="Card details">
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
@@ -833,7 +828,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 06e · Issuer · 3-D Secure OTP (hosted, simulated)
+@dev 07e · Issuer · 3-D Secure OTP (hosted, simulated)
 ====================================================================== -->
 <section class="screen" id="sc-card-otp" aria-label="Card OTP">
   <header class="hd">
@@ -873,7 +868,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 07 · Decentro · Debit successful — account verified
+@dev 08 · Decentro · Debit successful — account verified
 ====================================================================== -->
 <section class="screen" id="sc-paid" aria-label="Payment successful">
   <header class="hd"><svg class="logo"><use href="#decentro-logo"/></svg>
@@ -889,7 +884,7 @@ payer account and name, so the debit itself is the verification event.
         <div class="card-box">
           <div class="kv">
             <span class="k">Transaction ID</span><span class="v">DCNTR8831TXN01</span>
-            <span class="k">Paid via</span><span class="v" id="paidRail">Mandate account · AutoPay</span>
+            <span class="k">Paid via</span><span class="v" id="paidRail">UPI Autopay · mandate</span>
             <span class="k">Payer account</span><span class="v" id="paidAcct">XXXXXX4417</span>
             <span class="k">Payer name</span><span class="v" id="paidName">ANANYA R IYER</span>
           </div>
@@ -905,7 +900,7 @@ payer account and name, so the debit itself is the verification event.
 </section>
 
 <!-- =====================================================================
-@dev 08 · Merchant (AMC) · SIP active, verified account on file
+@dev 09 · Merchant (AMC) · SIP active, verified account on file
 ====================================================================== -->
 <section class="screen th-m" id="sc-merchant-done" aria-label="SIP active">
   <header class="hd">
@@ -1002,65 +997,64 @@ var DEV = {
     comp:['Progress bar','Checklist with ticking states'],
     states:['Auto-advances to 03'],
     api:'Decentro: validate session token, load merchant config and destination account rules.'},
-  'sc-mandate':{n:'03',t:'Mandate details',own:'d',owner:'Decentro',
-    comp:['Bank select','Account number field','IFSC field','Auth-mode segmented control'],
-    states:['Net banking selected by default, routing to 04','Debit card routes to 04b, which asks for card number, expiry and ATM PIN','Aadhaar eSign not offered in this build'],
-    valid:['Account number 9-18 digits','IFSC 11 characters','Max amount >= SIP amount'],
-    api:'POST /v3/payments/mandate/create {reference_id, consumer, bank{account_number, ifsc, account_type}, mandate{...}, auth_mode, redirect_url} -> 201 {decentro_txn_id, status: PENDING_AUTHORIZATION, authorization_url}.'},
-  'sc-bank':{n:'04',t:'Bank approval',own:'b',owner:'Bank (hosted)',
-    comp:['Mandate instruction card','Customer ID and password fields'],
-    states:['Hosted by the bank; Decentro holds the session'],
-    api:'Bank -> NPCI -> Decentro: authorisation result, pushed to the merchant webhook.'},
-  'sc-bank-card':{n:'04b',t:'Mandate via debit card',own:'b',owner:'Bank (hosted)',
-    comp:['Mandate instruction card','Card number with brand detection','Expiry','ATM PIN field'],
-    states:['Reached only when debit card is the selected auth mode','Approve disabled until the PIN is at least 4 digits','Falls back to net banking via the link'],
-    valid:['Card issued on the account being mandated','ATM PIN 4-6 digits, entered on the bank page only'],
-    api:'NPCI debit-card authentication. Decentro never receives the PAN or the PIN; it gets the authorisation result and the account holder name.'},
-  'sc-registered':{n:'05',t:'Mandate registered',own:'d',owner:'Decentro',
-    comp:['Success halo','Bank-returned detail list','Pending-verification note'],
-    states:['account_verification stays pending_first_debit until a debit succeeds'],
-    api:'Webhook -> merchant: mandate.registered {umrn, account_holder_name, account_number, ifsc, bank_name, account_verification: "pending_first_debit"}. This payload is what removes the RPD step.'},
-  'sc-pay':{n:'06',t:'Payment page',own:'d',owner:'Decentro',
+  'sc-mandate':{n:'03',t:'Autopay mandate setup',own:'d',owner:'Decentro',
+    comp:['Mandate detail card','UPI app option rows (intent flow)'],
+    states:['No account number is typed — the UPI app supplies it','Apps listed are the ones installed on the payer phone','Collect flow (enter a UPI ID) is not drawn in this build'],
+    api:'POST /v3/payments/upi/autopay/mandate/link (JSON body) {reference_id, amount_rule: "FIXED", default_amount: 5000, frequency: "MONTHLY", start_date, end_date, purpose} -> returns the mandate as PENDING plus the intent URL. Never ACTIVE at this point.'},
+  'sc-upi':{n:'04',t:'UPI app · approve + MPIN',own:'b',owner:'UPI app / payer bank (hosted)',
+    comp:['Autopay request card','Linked debit account row','4-box UPI PIN entry'],
+    states:['Approve disabled until 4 digits are entered','MPIN is the only auth mode on Autopay — there is no net-banking or debit-card variant','A decline here returns mandate_status REJECTED'],
+    valid:['UPI PIN 4 or 6 digits depending on the payer bank'],
+    api:'Hosted inside the UPI app. Decentro never receives the MPIN, and approval is not captured on the link call.'},
+  'sc-awaiting':{n:'05',t:'Awaiting confirmation',own:'d',owner:'Decentro',
+    comp:['Progress bar','PENDING -> approved -> ACTIVE checklist'],
+    states:['Polls until ACTIVE, REJECTED or timeout','PENDING and ACTIVE are deliberately separate steps'],
+    api:'GET /v3/payments/upi/autopay/mandate/status?decentro_mandate_id=<value> — query params only, no body. ACTIVE here is the proof the payer approved with their MPIN.'},
+  'sc-registered':{n:'06',t:'Mandate active · account + name match',own:'d',owner:'Decentro',
+    comp:['Success halo','Bank account card','Name match card with score','Pending-debit note'],
+    states:['account_number, ifsc and holder name arrive with the ACTIVE mandate','name_match score 94 against the PAN/KRA name; merchant threshold 85','Below threshold would hold the folio for manual review'],
+    api:'Status response data carries {mandate_status: "ACTIVE", account_number, ifsc, account_holder_name, bank_name, name_match:{pan_name, account_name, score, result}}. This payload is what removes the RPD step.'},
+  'sc-pay':{n:'07',t:'Payment page',own:'d',owner:'Decentro',
     comp:['Summary strip (merchant, amount, txn id, expiry)','Option rows reused from verification-sdk.html','Trusted-payments footer'],
     states:['All rails available: mandate AutoPay, UPI apps, net banking, debit card','Mandate AutoPay carries the Linked tag; the rest are ordinary options','Every rail returns payer account and name on success'],
     api:'POST /v3/payments/mandate/transaction {umrn, reference_id, amount, purpose, installment_number, rail}. Response carries payer_account and payer_name whichever rail was used.'},
-  'sc-nb-pick':{n:'06a',t:'Net banking · choose bank',own:'d',owner:'Decentro',
+  'sc-nb-pick':{n:'07a',t:'Net banking · choose bank',own:'d',owner:'Decentro',
     comp:['Bank option rows','Back to payment options'],
     states:['Popular banks listed; the rest would sit behind a search field'],
     api:'POST /v3/payments/mandate/transaction {rail: "net_banking", bank_code} -> returns the bank redirect URL.'},
-  'sc-nb-login':{n:'06b',t:'Net banking · bank login',own:'b',owner:'Bank (hosted)',
+  'sc-nb-login':{n:'07b',t:'Net banking · bank login',own:'b',owner:'Bank (hosted)',
     comp:['Payment summary','Customer ID and password fields','Cancel link'],
     states:['Hosted by the bank; Decentro holds the session','Cancel returns to the payment page with status CANCELLED'],
     api:'Bank-hosted. Decentro polls transaction status until SUCCESS, FAILED or EXPIRED.'},
-  'sc-nb-confirm':{n:'06c',t:'Net banking · confirm',own:'b',owner:'Bank (hosted)',
+  'sc-nb-confirm':{n:'07c',t:'Net banking · confirm',own:'b',owner:'Bank (hosted)',
     comp:['Account picker with balances','Pay button','Cancel link'],
     states:['The investor can pick an account other than the mandate account','account_match is computed server-side against the UMRN account'],
     api:'Bank -> Decentro: payment result {payer_account, payer_name, bank_ref}.'},
-  'sc-card':{n:'06d',t:'Debit card · details',own:'d',owner:'Decentro',
+  'sc-card':{n:'07d',t:'Debit card · details',own:'d',owner:'Decentro',
     comp:['Card number with brand detection','Expiry and CVV','Name on card'],
     states:['Brand detected from the IIN as the number is typed','Card is tokenised; PAN is never stored by the merchant'],
     valid:['Luhn check on the card number','Expiry in the future','CVV 3 digits, 4 for Amex'],
     api:'POST /v3/payments/mandate/transaction {rail: "debit_card", card_token} -> returns the 3-D Secure URL.'},
-  'sc-card-otp':{n:'06e',t:'Debit card · 3-D Secure',own:'b',owner:'Issuing bank (hosted)',
+  'sc-card-otp':{n:'07e',t:'Debit card · 3-D Secure',own:'b',owner:'Issuing bank (hosted)',
     comp:['Payment summary','6-box OTP input','Resend timer'],
     states:['CTA disabled until 6 digits are entered','Any 6 digits pass in this build'],
     valid:['Exactly 6 digits'],
     api:'Issuer -> Decentro: 3DS result. A card debit returns the card last 4 and the name, not a bank account number, so account_match is not applicable on this rail.'},
-  'sc-paid':{n:'07',t:'Debit successful',own:'d',owner:'Decentro',
+  'sc-paid':{n:'08',t:'Debit successful',own:'d',owner:'Decentro',
     comp:['Success halo','Transaction detail list','Verification callout'],
     states:['account_verification flips to verified on a successful debit'],
-    api:'200 {decentro_txn_id, status: SUCCESS, rail, payer_account, payer_name, account_verification: "verified", verified_via: "first_sip_debit", verified_at}.'},
-  'sc-merchant-done':{n:'08',t:'SIP active',own:'m',owner:'AMC (merchant)',
+    api:'GET /v3/payments/upi/autopay/presentation/status?presentation_sequence_id=<value> — query params only, no body. data.presentation_detail {status, status_description, bank_reference_number, npci_txn_id, transaction_authentication_timestamp}. Not the generic UPI payments transaction-status route.'},
+  'sc-merchant-done':{n:'09',t:'SIP active',own:'m',owner:'AMC (merchant)',
     comp:['SIP summary grid','Verified account card'],
     states:['Shown only after status is confirmed server-side, not from the redirect alone'],
     api:'Redirect to merchant with {sip_status: ACTIVE, umrn, account_holder_name, account_number, ifsc, account_verification, verified_via, next_installment_date}. Name match against PAN/KRA stays with the merchant.'}
 };
-var ORDER=['sc-merchant','sc-loader','sc-mandate','sc-bank','sc-bank-card','sc-registered','sc-pay','sc-nb-pick','sc-nb-login','sc-nb-confirm','sc-card','sc-card-otp','sc-paid','sc-merchant-done'];
+var ORDER=['sc-merchant','sc-loader','sc-mandate','sc-upi','sc-awaiting','sc-registered','sc-pay','sc-nb-pick','sc-nb-login','sc-nb-confirm','sc-card','sc-card-otp','sc-paid','sc-merchant-done'];
 var OWN={m:'own-m',d:'own-d',b:'own-b'};
 var STEPS=[['Mandate','Account authorised at the bank'],['First debit','Confirms the account'],['Verified return','Merchant gets the payload']];
-var STAGE={'sc-merchant':0,'sc-loader':0,'sc-mandate':0,'sc-bank':0,'sc-bank-card':0,'sc-registered':0,'sc-pay':1,'sc-nb-pick':1,'sc-nb-login':1,'sc-nb-confirm':1,'sc-card':1,'sc-card-otp':1,'sc-paid':1,'sc-merchant-done':2};
+var STAGE={'sc-merchant':0,'sc-loader':0,'sc-mandate':0,'sc-upi':0,'sc-awaiting':0,'sc-registered':0,'sc-pay':1,'sc-nb-pick':1,'sc-nb-login':1,'sc-nb-confirm':1,'sc-card':1,'sc-card-otp':1,'sc-paid':1,'sc-merchant-done':2};
 
-var EVENTS=[], T={}, current=null, AUTH_MODE='net_banking';
+var EVENTS=[], T={}, current=null;
 function $(s,r){return (r||document).querySelector(s)}
 function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -1093,7 +1087,25 @@ enter['sc-loader']=function(){
   later('l4',function(){go('sc-mandate')},2800);
 };
 enter['sc-pay']=function(){ renderPayOps(); };
-enter['sc-bank-card']=function(){ brandOf($('#mcNum').value.replace(/\D/g,''),'#mcBrand','#mcBrandName'); };
+enter['sc-mandate']=function(){ renderUpiApps(); };
+enter['sc-upi']=function(){
+  paintUpiApp();
+  $$('#upiPin input').forEach(function(i){i.value='';i.classList.remove('filled')});
+  $('#upiGo').disabled=true;
+  setTimeout(function(){var f=$('#upiPin input'); if(f)f.focus()},140);
+};
+enter['sc-awaiting']=function(){
+  var fill=$('#awFill'); fill.classList.remove('run'); void fill.offsetWidth; fill.classList.add('run');
+  var items=$$('#awList li');
+  items.forEach(function(li){li.classList.remove('run','ok')});
+  items[0].classList.add('ok'); items[1].classList.add('run');
+  later('a1',function(){items[1].classList.replace('run','ok');items[2].classList.add('run')},1100);
+  later('a2',function(){
+    items[2].classList.replace('run','ok');
+    log('mandate.status',{mandate_status:'ACTIVE',account_number:'XXXXXX4417',name_match_score:94});
+  },2200);
+  later('a3',function(){go('sc-registered')},2600);
+};
 enter['sc-nb-pick']=function(){ renderNbBanks(); };
 enter['sc-nb-login']=function(){ paintBank(); };
 enter['sc-nb-confirm']=function(){ paintBank(); renderNbAccts(); };
@@ -1115,7 +1127,7 @@ enter['sc-paid']=function(){
   $('#paidAcct').textContent=p.acct;
   $('#paidName').textContent=p.name;
   var m=$('#paidMatch');
-  if(p.match==='matched'){ m.className='note ok'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-check"/></svg><span><b>Bank account verified</b>The payer account matches the mandate account, and the name matches the holder on record.</span>'; }
+  if(p.match==='matched'){ m.className='note ok'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-check"/></svg><span><b>Bank account verified</b>The debit cleared from the account the mandate returned, and the name already matched the PAN record.</span>'; }
   else if(p.match==='different_account'){ m.className='note warn'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg><span><b>Paid from a different account</b>The name matches, but the debit came from an account other than the mandate account. The merchant decides whether that is good enough to mark the account verified.</span>'; }
   else { m.className='note warn'; m.innerHTML='<svg class="i i-sm" style="margin-top:1px"><use href="#i-info"/></svg><span><b>Card rail returns no account number</b>The issuer returns the card last 4 and the name, so there is no bank account to match against the mandate. Name match only on this rail.</span>'; }
 };
@@ -1141,7 +1153,7 @@ function renderSteps(){
 /* ---------- payment options (verification-sdk row pattern) ---------- */
 var UPI_IC={"phonepe": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAFkklEQVR4nM2YXWwUVRTH/3dmZ2e/umyXlVaQxdaGtDVobUJNsJiITdOEVORJgyFogj4YRKIvJCgvPogmGgkJ+oARAkFNFJuSIALRqAX5MBQNFigLyMbSIst2u98znZnrw7S77e69s9NSEv9Pzdy75/56z7nn3HMJpRT/Dzlm9zNKoerUMIhOoRugFIRAFCASCAJ1ioSQ+4yiG1A0qoxD1SeQeKiyA7KDyBIE20zEpoM0A+k8VTS7dgtySfDJRBTmAkU3kFaQH7+nkHI7idcJa6AKKIqGRHZu4poQ+F1wSVyHWaGk8jSrzglGUT6ZeOWZoFCKRJZOxuYcyyURvwvlR4ztvbEc7hMHgPw4Hcsx/n/GrqQVZJTK8RG7mYxejI1E4ol/M6lYjhqYv8i37Nm6xpWL7AD5ZHjlaTtTimInTvuP3vjp8z9v30gwR90+52OdDz/1YlNNfcDaTsBD5Cl5bRqKQRFLWx2p4cH4V+/2jVwbtV7DVEtXXdfrrdULfbwJAkHIV8zL01BSeWRVLsjP+/86svN3OxAFOZziKzs7GpbX8iZ4Zfgm3VQMW4NacfR8eLqcI9wUfP6NlnBTkPcrTdW/ePNE5NwIb0JWRWEriruSzNMcJ4uc/nbwu/d/K/nY2hHevHsVgGxS3b6mNzaU5q0nyeKmfatrG6qZo16Z+GSgsCuUgscRiyYPf3S2/Pv5E9E9W/sAePzOzbtXefxOHsq4ou9968dckr1AwRUTKIrGdc03753SOEmm71DEpAk3BTfuaOdZADB6K/3DZ+eZQ5RO5LACCtvE4KlbN/pvW6xRoGntCK/b1mYx81xPJJNQmEOqNgVF5aCc6bliYb2EpnNDc+eG5sa22tAixgHWVP3k15eYFsyyTyiluoFYmu2gbSsOlHtn7+DLFfm2r+mNXoqXfHxwaXDLwW7m/AVVRACgc+IkevEOM0qil0vXKBcziocH45nRPHO+TuEAYBhslrv/sM/n9ud6Mbk3Pbsu9Oy6AKDxydqt+7sA7Fh/9PIZbiIZvppoaGNkPN2AAMCg7OvM6FCKZ3HWyibZkUspBJOIKVs30hkql2JnF82gAgAHZ0WLrDVr8Ww6BAgACGHHSlXQPWvTPAVqvMzvgkAcAESBMDuaJS0LLIxGL8fDjcH2tQ3RgXhsKN2+tsEOSmhxFRvFbMl4XZM3INfUB25fTzBHj+0d2Lij3eN3bvzAKuVPVX1rrXse+5Itmg4SBS7N4511PLtmki2E4V1+ZS6opYttTRRAyGSjKkvsyrzypeZfvxzIjbFPYN+hSN+hiPl3Ia/w5AnIrasfYQ6ZzdHE4ZEd7G1xuh2dr7VYLGBfz2xYJskiBwVTURiNiakVLzTWPVFTcaUs5zpi6qHm0NPrH2UOicJENine4jIKTbP9gFQs98m63nScXT4Kau0Ih5uCx/YNlGAFar2bD3R7A+yA9buI2zkdBcCdFOWUI4wOp/dsOh67mbSmKVdNXeDVTzurQuwU5RAw3zfhjmkoORXJPPc6l0+pB9/55crJIfscy9c0dL/dJnsk3oR57mJDX9qSxdKUV5JM9R+5fvjjs7z7WEELlwZXb1nOLMIFSSKC3mKElqJoBuKZCm8umqL/cfzv/u+vXT0zXDIUWuJfsuyBls76pSsWWrMSgvneaQWX0TOrOkYz9p6iFH0kMqrmdUGAL+QOLfbb+ZXJUe0h0vSjzX7UyI/TsZxNs7NRtZc4y1IM96lH0ehYDnP+kioQBMr2owIKAN1AIgeNd/WduSQRAQ/h1bsKb3GUIqPSrGr3IZMnQuB1lj6ozAzFlEGRVpDjN/fWckvwubibMTMUU5qBjEIVzW4AEQKXRDwSHOwieA8oBakaVTSM69ANlBQKgcAhEkmE7AAzNucYpUQmkEAqvBBX1H+doG2oEqv50AAAAABJRU5ErkJggg==", "gpay": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAFT0lEQVR4nM2YW2gcVRjH/9/M7M5eJptNk2wbqZcUeomKSEWxL9YKXtAWMS+9WJ9Uqg8+iLbFB/GCD76oL4oU1KI+VPsQhNDWWjFtRbBiY6nWJIUSKk2xSSDZzO7MzvXzYTZ7mczM7qZZ8P+ynLPnfOc353zn+845xMz4f0haXjdmmA67LjkMxwUziCAKEAmCwHGRiNqM4rgwbDYsmE4ZKQxVliBLJMcgNM1ETS6Q7aJQYsNu1m5FiRgUmURhJVAcFwUDJeumXCoZp3Qc0UANUAwb89rK+DURMgkkYqELFoWillgzVwSjKkWmtNwKCjPmNV70zRVWIkaZBJZuseDVy+toEweAksV5PeD7A1AKBgy7vXHPsFE0/EP4UQIbtUMFA77QUIfiMgKnrk1a0OsctS7aFg0sIyP9cH1kaHL4ijoJYHUi9/jaR565Y7sipRt2dBlFkxW57MDVHeQyZtTWQAp28a3z71+c+8tXr0jp59bvGrx9e0MLROhVygmrirJQYr3FKPLauTeXclS0mtMHcoP33DcYbSQtkyLXoDBjuokpOT3uzCxwb4Ye3iQOXR3+dOyL6PY51X5sLvPEk2+sXnt3WBsi5DqoilKyOK834Dh8xjx+sez0PR18Y9WHanw0rPG6UuLdock1qg1AlQVl76vYvjuscVea4uIiSl7nkhXFcWnKfXuo5Ku0kmNa30csFv0cUu6Dz/7oMNzaSn5qF154PdC4t0blzWw2yv5HzwWQxvSB5OzepfX7rbNdXX4+OvYNTV8PNO6lfQGA48KN9JPT487fU8GJQNIGfDU75H+29E5knx+TN8z7/uKfhgONeOdAAYATyaEZOPpr6NZy5Ku1RYWs/Up5T6UevRZl12fHQ3Ej52T4ghkRb4yu72uLzyavZKi8lGLW/wGkZEJRXA+FQ48z0yqfuBDqR2bmrJ0cqxT7BO3l1ETVej7u7/DA1jBTiwvkhjXAsVGrGLI4LGh691BtzQHlz9pi6bdcXYf7H+LcLWED2S4LAKTwI+fkbChmKXuCpZlKcXNsdlv836rpG0ndhxKykz1JAiQARKGuEJYKHGnWzJ6srTmo1GUA7dSttUXe+SLCpwSAIJAAQAy/qySXLLenUu/XtZFtT+LKRjFfKRoTneZVpcrRu4Z27IngACB4cSXi1tTfE7B4lLpsKb9XigpZL6UnahtoP9ZNCe3ex+mOaBRRgFD+CaHZ+WA8tWRiDq77cl9qXCELQJ+gfZ79pbKBAWg/9znz1T5852betqMhB9FiDoo4IZwedz45ZdTVbFGCmwKO0zN/aAPPLWarlIL3DnH/xmgULweVUaKvXpem3I9PGbOLgS4CRe0/bCQG+cghTF6mtILd+xpyAOhWSBJqjk7TaoM767fnzOOjqmYnj2y+q68+3nsyla35TSMNB/ZJFNCj1JxXABQNLhiRnQBdy3918nynPfpK/wHfXyx05gdGrOS9raJkEuTt07rb4YzK0Sna07Wpse6Zd26zj9ZyLKz/zuwIjethkgR0K0uO2QB0EwulZk/acfWMpI4AcOV+M/u0K2Zb5QDQmaxe6P135tkCR6SklVVMxKp0NYr4I1g2tZy3q2WICJ3JupH8KJKAbKrtLEToSvmfogLielxEZ7K9KNkUxUR/ZehTj2FzXl/OvTVaAgVzRKEAcFzM67Cjj76tKCYim6KwfNfgLY4ZRZM1s9mHzDARIR1HWo7ywqbGcBkFA7q5TJpkDEoidDJaQ/FkuygabNjNOhAREjFKxSAFecZNoVRk2mzYsJyAu5xAkESKiZAlBPrmCqP45AEJ1OCFuKH+A94PXOTApBXoAAAAAElFTkSuQmCC", "paytm": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAET0lEQVR4nM2YTWzcRBTH/zO2117b2W5JpGYpvbTJpQ0p7YGqpSrlAlHgAhWKOCRFqlIJIYh6gktPnHIKH6pyiJAquBRQ4BQJcQChqghxCESFSnQThETb3UITkuyH1157hoN3vbtee7PZeBP+p/F4xvPzvDdvZh7hnOP/IbGzbpzDcjhjxOFwGDgHIRAoBAJKeUwghHQZxWEwbW6WYTkVpDBUWYQsElkCbZuJtGkgmyFf4qbd7nc9KRJ0mQg0ChSHIW+iVN6RS8VjRIuhNdAWKKaN9WI0fk0IEgoUKdRgrVByJV60IsGoSZeJJm8HhXOsF3nVNyOWIpGEguYlFmy9DQNd4gBQKvMNI+D/A1DyJky7u3HPtFEw/UP4UQIbdUN5E77Q0IDCOAKnrkvaNBoctQGlYGI3dyTGUbBq49H6F0Vrt7fGolX7+RpKfldcxCfOUaiGLupVGVFHszblmaKC0u3V20KcV2KYh7JXJABg2XUoVnQomw4+e7S9z7nbPgXgMLCI7POXyV//3bjxd3lbvdxzoAjAaeJIL98bvzztPV5588LYhfNz1xc+/uRrAKkDj119Zzy9cm/m2vyliZHzZ4+PX54+MTww/t5br9wpul1evmOM9opX/zSHVPprkQEY6xPd2frgiDLW5z89OhwUAGuak1y+VP84c20eQKJHcx8zD9fmri9s5gqBjT2tlxkAlwOoWW1qJaC9w1wUHnqc+fHbj7zyiy+cmp15e/LiaFjjMz30y6MqgNM9wldH427l5AHJrTwWp9lTeljfqoFYWAP8vJR2C5ns6sTkdK5geK8eT/UBuHnrdja7FtofSIheodWB22acAhDDj5xvXPkQgK4pi0vLuYIxePjg6PNPu69OHh/QNeXuyv2Fb35qMUabEikoAEKC14+uKSeGB86dGZqdmXqQeQTg3NknXxo57b5N9fd+OvfupYkRD24nopSIAARKAm80g0eemH1/yi3fXbkP4PP572/euu01uPHFd+k/HmSyqxGguHGl+dbUoyu+mmefGR48fDBXMFwmj29xKZ15uKZrymuvPufrkpTauPxUJdDqMfufHPet6MVfllP9+1P9vS36Z7Krmey/AE4+NeBV/pBjh2LkkEzc8pBKE0Kt8rciA3BMbaAUKPp0UkHZLPG92pkBaDLR5eoeJLdcad2WIgGooQRcTHZHAq1Ek5rNtNjeoGixyhzUocik/QREVBIp4tUpaPBkXd5tlvr7cwNKfKu8Q7SShIbEgn/kpNpJ7qoDEYJ98YaR/CgiRVLtOgsh2K/6U1EB9ogJ2BfvLkpSJZLgrwxN9Zg23zCiv7dSEszRCgWAw7BuwG4++nYqSUBSDQ0ZW+TiOEfB4kWr3URmmAiBFoPWMli0NQbjyJswOr3cxyXoytbxcxu/azMUTG7a7ToQIVAkokoQgzxjRyieLJubNspOwF2OEogCkQTIIgJ9M2IUn1wgSnYaqf8DYu/IhZkN7FAAAAAASUVORK5CYII=", "bhim": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAuCAIAAADY27xgAAAEHUlEQVR4nM2Yz28bRRTHv29217v2Ok74JUElThSkppceOAASqsQlzY0DokcQnHLpGZU/oOLCIT0Teo64IbUuOZG0UbmUoBIX4ST8SGiCWuHE8a/d7M7jsPba3qztnbWD+F48O+uZ/eybt/PmPWJm/D+kpxvGDNdnKcln+BLMIIImoBGE4IxGRGeM4ks4HjsncP020iBUU4epk2lAJGaihAvkSdRa7HhJ5w1lGcibpIlJoPgSNQetk7FcKpshO4PhQCNQHA+Hjcn4NREKFixj4IINQzluccOdCEZXeZNsUwWFGYcN7vjmhGUZVLBw+hOLX72jJs6IA0DrhI+aMe8fg1Jz4Hhnu+85HupO9BFRlNg/DRE1j9LR1BxEtoY+FMmINd0Q8d0vQ5qtp+U7pTvJx1abfY7ah1J3oByRSity7augubG3cWt9KflQyai73eeJ3hsNVxGksovKHq0tBYZZ/XX1oHqgZJiG2335LkpNxUUC0eZ3ANCqBob56a8NAEqGYUa9s3WJsKupvptxeb3NtLZ073ExaKsbhvtQUn69pZV2o1Xd3/g27FY1TLCHhSjqHNsPeq/mH39vZ3JBW9UwrteD4qZAedT3sHyz+sH0q+GlkmGCsC8A+BIyxfrs/BDp+LD8IJ1hgnOgAOCn4KjsYr8U6RvHMH6AIlPYpN9RQo1jGAFAsvKZmLfWY/tTG6azQFKVBLS5MuhWgbvTHbeOD6r7SSb0JAsAeoIzcB/Hk020qrG3bs9evvmsHLTtjL149ebLhVeSzKkL6ACI1HxF/nw3dkVvz17+ovJ70H7txfOLVxfz5lTCOYUgHYAmaHBGE6etGJ/9+o23b6XlACCClCx51oTgrPRbFOXGhXeLh3+m5gCgCYj2T3KanVMcl+bG5yDqJKqmkTQyy0fFXuwbl+aKf/8StOcuXLn23jVVDqCdHHVQdGomOzdRuN9bU9+8+X5xezXkuD7/uSpEBwUIw6GpxyQmMarsorIXcNDC8kP2x+fQRHs36W4pdmb0sPaxzZqihWU+d/H+zv0xOQDYmbYNukUN26SGy8PDEZfXQ45722sAPnrr40/e+TQ1hy6Q7Zigr76SN6naGsbCT0piYZnPXQTw4x8PP7tyfX52PjUHgN78OZozP6vxwJBU2SWrwNnp4Grrafn8S6+Pw2FoeN7uemgUxZP4p/5f1OeI8ILdVwKKRkJdYCanXkdT53guFy1FxQTljIbp7NmizOTI0KKdA0s9jsdHTfW8dZQExXMMQwHgSxw24aU5+sbL0DCTo0HxbkQtjhl1lxtu0kLmIBHBzsA2h3lhomdIRs1BwiB1WlkDeWugMdRQAnkSdYcdL6kDEcEyKGdAj/OMsVBCuR47Hk78mFxOEHSNDA2mjljfnDBKRAGQoBEV4pH6F6eHAYvtc/3wAAAAAElFTkSuQmCC"};
 var PAY_OPTS=[
-  {id:'autopay',n:'Mandate account · AutoPay',s:'Meridian Bank XXXXXX4417 · ANANYA R IYER',tag:'Linked',ic:'i-repeat'},
+  {id:'autopay',n:'UPI Autopay · your mandate',s:'Meridian Bank XXXXXX4417 · ANANYA R IYER',tag:'Linked',ic:'i-repeat'},
   {id:'phonepe',n:'PhonePe',img:'phonepe'},
   {id:'gpay',n:'Google Pay',img:'gpay'},
   {id:'paytm',n:'PayTM',img:'paytm'},
@@ -1217,7 +1229,7 @@ function renderNbAccts(){
 function payerFor(rail){
   if(rail==='card')       return {label:'Debit card · Meridian Bank',acct:'Card •••• 8830',name:'ANANYA R IYER',match:'not_applicable'};
   if(rail==='netbanking') return {label:'Net banking · '+NB_BANK.n,acct:NB_ACCT,name:'ANANYA R IYER',match:(NB_ACCT==='XXXXXX4417')?'matched':'different_account'};
-  if(rail==='autopay')    return {label:'Mandate account · AutoPay',acct:'XXXXXX4417',name:'ANANYA R IYER',match:'matched'};
+  if(rail==='autopay')    return {label:'UPI Autopay · mandate',acct:'XXXXXX4417',name:'ANANYA R IYER',match:'matched'};
   return {label:'UPI · '+(RAIL_LABEL[rail]||rail).replace('UPI · ',''),acct:'XXXXXX4417',name:'ANANYA R IYER',match:'matched'};
 }
 function payNow(rail){
@@ -1227,7 +1239,7 @@ function payNow(rail){
   go('sc-paid');
 }
 var PAID_RAIL='autopay';
-var RAIL_LABEL={autopay:'Mandate account · AutoPay',phonepe:'UPI · PhonePe',gpay:'UPI · Google Pay',paytm:'UPI · PayTM',bhim:'UPI · BHIM',netbanking:'Net banking',card:'Debit card'};
+var RAIL_LABEL={autopay:'UPI Autopay · mandate',phonepe:'UPI · PhonePe',gpay:'UPI · Google Pay',paytm:'UPI · PayTM',bhim:'UPI · BHIM',netbanking:'Net banking',card:'Debit card'};
 
 /* ---------- dev console ---------- */
 function renderDev(){
@@ -1290,35 +1302,15 @@ $$('.dev-tab').forEach(function(t){t.addEventListener('click',function(){
 })();
 $('#dev-spec').textContent=JSON.stringify({
   flow:'mutual-fund-sip-mandate-first',
-  premise:'The eNACH mandate replaces the reverse penny drop. The first SIP debit from the mandate account is the verification event.',
-  removed:['reverse_penny_drop','second_mandate_screen'],
+  product:'UPI Autopay (not eNACH)',
+  premise:'The Autopay mandate returns the bank account and a PAN name match once it is ACTIVE, so the reverse penny drop before the journey has nothing left to do. The first debit then confirms the account can be debited.',
+  removed:['reverse_penny_drop','second_mandate_screen','enach_netbanking_and_debit_card_auth'],
+  auth:'MPIN inside the UPI app — the only auth mode on Autopay',
   screens:ORDER.map(function(id){var d=DEV[id];return {id:id,n:d.n,title:d.t,owner:d.owner,api:d.api}})
 },null,2);
 
 /* ---------- screen wiring ---------- */
 $('#mConsent').addEventListener('change',function(){$('#mGo').disabled=!this.checked});
-$$('.seg button').forEach(function(b){b.addEventListener('click',function(){
-  $$('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});
-  AUTH_MODE=b.dataset.auth;
-  log('mandate.auth_mode',{auth_mode:AUTH_MODE});
-})});
-(function wireMandateCard(){
-  var num=$('#mcNum'); if(!num)return;
-  num.addEventListener('input',function(){
-    var d=this.value.replace(/\D/g,'').slice(0,19);
-    this.value=d.replace(/(.{4})(?=.)/g,'$1 ');
-    brandOf(d,'#mcBrand','#mcBrandName');
-  });
-  $('#mcExp').addEventListener('input',function(){
-    var d=this.value.replace(/\D/g,'').slice(0,4);
-    this.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
-  });
-  $('#mcPin').addEventListener('input',function(){
-    this.value=this.value.replace(/\D/g,'');
-    $('#mcGo').disabled=this.value.length<4;
-  });
-})();
-
 function brandOf(d,bSel,nSel){
   var b='CARD', n='Card detected';
   if(/^4/.test(d)){b='VISA';n='Visa'}
@@ -1374,6 +1366,53 @@ function brandFromNumber(){
     if(this.disabled)return;
     log('card.otp_resent',{});
     enter['sc-card-otp']();
+  });
+})();
+
+/* =========================================================================
+   UPI AUTOPAY — app selection (intent flow) and MPIN approval
+   Icons are the same assets the Verification SDK demo uses.
+   ========================================================================= */
+var UPI_APPS=[
+  {id:'phonepe',n:'PhonePe',mk:'P',c:'#5F259F'},
+  {id:'gpay',n:'Google Pay',mk:'G',c:'#1A73E8'},
+  {id:'paytm',n:'PayTM',mk:'P',c:'#00A9E0'},
+  {id:'bhim',n:'BHIM',mk:'B',c:'#00539F'}
+];
+var UPI_APP=UPI_APPS[0];
+function renderUpiApps(){
+  var g=$('#upiApps'); if(!g)return;
+  g.innerHTML=UPI_APPS.map(function(a){
+    return '<button class="op-r" type="button" data-app="'+a.id+'">'+
+      '<img class="ic" src="'+UPI_IC[a.id]+'" alt="">'+
+      '<span class="op-t">'+esc(a.n)+'<small>Approve with your UPI PIN</small></span>'+
+      '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+  }).join('');
+  $$('#upiApps .op-r').forEach(function(b){
+    b.addEventListener('click',function(){
+      UPI_APP=UPI_APPS.filter(function(x){return x.id===b.dataset.app})[0];
+      log('mandate.link',{upi_app:UPI_APP.id,mandate_status:'PENDING'});
+      go('sc-upi');
+    });
+  });
+}
+function paintUpiApp(){
+  var mk=$('#upiMk'); if(mk){mk.textContent=UPI_APP.mk; mk.style.background=UPI_APP.c}
+  var nm=$('#upiName'); if(nm)nm.textContent=UPI_APP.n;
+}
+(function wirePin(){
+  var boxes=$$('#upiPin input'); if(!boxes.length)return;
+  function sync(){ $('#upiGo').disabled=!boxes.every(function(b){return b.value.length===1}) }
+  boxes.forEach(function(b,i){
+    b.addEventListener('input',function(){
+      this.value=this.value.replace(/\D/g,'').slice(0,1);
+      this.classList.toggle('filled',!!this.value);
+      if(this.value&&i<boxes.length-1)boxes[i+1].focus();
+      sync();
+    });
+    b.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&!this.value&&i>0)boxes[i-1].focus();
+    });
   });
 })();
 
